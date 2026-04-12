@@ -60,20 +60,16 @@ def optimize_resume(data: ResumeRequest):
         if not data.resume or not data.job_description:
             raise HTTPException(status_code=400, detail="Missing input")
 
-        print("Incoming request")
-
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are an expert ATS resume writer."},
-                {"role": "user", "content": f"Rewrite this resume for the job.\n\nResume:\n{data.resume}\n\nJob:\n{data.job_description}"}
-            ],
-            temperature=0.7
+                {"role": "user", "content": f"Resume:\n{data.resume}\n\nJob:\n{data.job_description}"}
+            ]
         )
 
         result = response.choices[0].message.content
 
-        # Save resume
         resume_id = str(len(resume_store) + 1)
         resume_store[resume_id] = {
             "content": result,
@@ -87,9 +83,8 @@ def optimize_resume(data: ResumeRequest):
         }
 
     except Exception as e:
-        print("ERROR:", str(e))
-        raise HTTPException(status_code=500, detail=str(e))
-
+        print("ERROR:", str(e))   # 👈 shows in Render logs
+        return {"success": False, "detail": str(e)}  # 👈 shows in frontend
 
 # 🔹 Create Razorpay Order
 @app.post("/create-order")
