@@ -5,7 +5,7 @@ async function optimizeResume() {
   const resume = document.getElementById("resume").value;
   const job = document.getElementById("job").value;
 
-  const res = await fetch("http://127.0.0.1:8000/optimize-resume", {
+  const res = await fetch("https://ai-resume-builder-gkis.onrender.com/optimize-resume", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
