@@ -41,34 +41,23 @@ def home():
 # 🔹 1. Optimize Resume
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
-    prompt = f"""
-Rewrite this resume for the given job.
+    try:
+        print("Incoming request")
 
-Resume:
-{data.resume}
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": f"Resume: {data.resume}\nJob: {data.job_description}"}
+            ]
+        )
 
-Job:
-{data.job_description}
+        result = response.choices[0].message.content
 
-Make it ATS optimized with strong bullet points.
-"""
+        return {"success": True, "data": result}
 
-    response = openai_client.chat.completions.create(
-        model="gpt-4.1-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    result = response.choices[0].message.content
-
-    # Save temporarily
-    resume_id = str(len(resume_store) + 1)
-    resume_store[resume_id] = {
-        "content": result,
-        "paid": False
-    }
-
-    return {"resume_id": resume_id, "data": result}
-
+    except Exception as e:
+        print("ERROR:", str(e))  # 👈 shows in Render logs
+        raise HTTPException(status_code=500, detail=str(e))
 
 # 🔹 2. Create Razorpay Order
 @app.post("/create-order")
