@@ -25,7 +25,7 @@ async function optimizeResume() {
 async function payNow() {
 
   // Create order
-  const orderRes = await fetch("http://127.0.0.1:8000/create-order", {
+  const orderRes = await fetch("https://ai-resume-builder-gkis.onrender.com/create-order", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({amount: 99, resume_id:resumeId})
