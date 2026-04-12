@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Resume Builder</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>AI Resume Builder 🚀</h1>
+
+  <textarea id="resume" placeholder="Paste your resume"></textarea>
+  <textarea id="job" placeholder="Paste job description"></textarea>
+
+  <button onclick="optimizeResume()">Optimize Resume</button>
+
+  <h2>Result:</h2>
+  <pre id="result"></pre>
+
+  <button id="payBtn" style="display:none;" onclick="payNow()">Download (₹99)</button>
+
+  <script src="script.js"></script>
+</body>
+</html>
