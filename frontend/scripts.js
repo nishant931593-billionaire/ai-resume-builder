@@ -1,3 +1,4 @@
+console.log("JS Loaded");
 let resumeId = "";
 
 async function optimizeResume() {
