@@ -63,6 +63,7 @@ async function payNow() {
     });
 
     const orderData = await orderRes.json();
+    console.log("ORDER DATA:", orderData);
 
     const options = {
       key: "rzp_test_ScVNoMEJMY4U5q",
