@@ -1,13 +1,13 @@
-/* Reset */
+/* RESET */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Body Styling */
+/* BODY */
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Segoe UI', sans-serif;
   background: linear-gradient(135deg, #667eea, #764ba2);
   min-height: 100vh;
   display: flex;
@@ -15,31 +15,39 @@ body {
   justify-content: center;
 }
 
-/* Main Container */
+/* CONTAINER */
 .container {
-  background: #ffffff;
-  padding: 30px;
-  border-radius: 15px;
+  background: #fff;
+  padding: 35px;
+  border-radius: 20px;
   width: 100%;
-  max-width: 800px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  animation: fadeIn 0.5s ease-in-out;
+  max-width: 850px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+  animation: fadeIn 0.6s ease-in-out;
 }
 
-/* Heading */
+/* HEADINGS */
 h1 {
   text-align: center;
-  margin-bottom: 20px;
-  color: #333;
+  margin-bottom: 10px;
+  color: #222;
+  font-size: 28px;
 }
 
-/* Textareas */
+.subtitle {
+  text-align: center;
+  margin-bottom: 25px;
+  color: #666;
+  font-size: 15px;
+}
+
+/* TEXTAREAS */
 textarea {
   width: 100%;
   height: 130px;
-  padding: 12px;
+  padding: 14px;
   margin-bottom: 15px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #ddd;
   font-size: 14px;
   transition: 0.3s;
@@ -49,16 +57,16 @@ textarea {
 textarea:focus {
   border-color: #667eea;
   outline: none;
-  box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 0 8px rgba(102,126,234,0.4);
 }
 
-/* Button */
-button {
+/* MAIN BUTTON */
+.main-btn {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   border: none;
-  border-radius: 10px;
-  background: #667eea;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea, #5a67d8);
   color: white;
   font-size: 16px;
   font-weight: bold;
@@ -66,26 +74,94 @@ button {
   transition: 0.3s;
 }
 
-button:hover {
-  background: #5a67d8;
+.main-btn:hover {
   transform: translateY(-2px);
+  opacity: 0.95;
 }
 
-/* Output Box (for result) */
-#output {
+/* PAY BUTTON */
+.pay-btn {
+  margin-top: 15px;
+  background: #111;
+  color: #fff;
+}
+
+.pay-btn:hover {
+  background: #333;
+}
+
+/* RESULT BOX */
+#result {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f8f8f8;
+  border-radius: 12px;
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* BLUR EFFECT */
+.blur {
+  filter: blur(6px);
+  user-select: none;
+}
+
+/* ATS BOX */
+#atsBox {
   margin-top: 20px;
   padding: 15px;
-  background: #f7f7f7;
-  border-radius: 10px;
-  white-space: pre-wrap;
+  background: #f1f5ff;
+  border-radius: 12px;
+}
+
+#atsBox h3 {
+  color: #333;
+  margin-bottom: 10px;
+}
+
+/* SECTIONS */
+.section {
+  margin-top: 25px;
+  padding: 15px;
+  border-top: 1px solid #eee;
+}
+
+/* BEFORE AFTER */
+.bad {
+  color: #e53e3e;
+  font-weight: 500;
+}
+
+.good {
+  color: #38a169;
+  font-weight: 600;
+}
+
+/* LISTS */
+ul {
+  margin-top: 10px;
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #444;
+}
+
+/* TRUST TEXT */
+.section p {
+  margin-bottom: 8px;
+  color: #555;
   font-size: 14px;
 }
 
-/* Animation */
+/* ANIMATION */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(15px);
   }
   to {
     opacity: 1;

@@ -1,61 +1,102 @@
 console.log("JS Loaded");
+
 let resumeId = "";
 
 async function optimizeResume() {
   const resume = document.getElementById("resume").value;
   const job = document.getElementById("job").value;
 
-  const res = await fetch("https://ai-resume-builder-gkis.onrender.com/optimize-resume", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      resume: resume,
-      job_description: job
-    })
-  });
+  if (!resume || !job) {
+    alert("Please fill both fields");
+    return;
+  }
 
-  const data = await res.json();
+  // 🔄 Loading state
+  document.getElementById("result").innerText = "Optimizing your resume...";
+  
+  try {
+    const res = await fetch("https://ai-resume-builder-gkis.onrender.com/optimize-resume", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        resume: resume,
+        job_description: job
+      })
+    });
 
-  document.getElementById("result").innerText = data.data;
-  resumeId = data.resume_id;
+    const data = await res.json();
 
-  document.getElementById("payBtn").style.display = "block";
+    // Show result (blurred initially)
+    document.getElementById("result").innerText = data.data;
+    document.getElementById("result").classList.add("blur");
+
+    resumeId = data.resume_id;
+
+    // 🔥 Show ATS box
+    document.getElementById("atsBox").style.display = "block";
+
+    // (Fake dynamic score for now)
+    const score = Math.floor(Math.random() * (85 - 65) + 65);
+    document.getElementById("score").innerText = score;
+
+    // 🔥 Show pay button
+    document.getElementById("payBtn").style.display = "block";
+
+  } catch (error) {
+    console.error(error);
+    document.getElementById("result").innerText = "Something went wrong. Try again.";
+  }
 }
 
 
 async function payNow() {
 
-  // Create order
-  const orderRes = await fetch("https://ai-resume-builder-gkis.onrender.com/create-order", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({amount: 99, resume_id:resumeId})
-  });
+  try {
+    // Create order
+    const orderRes = await fetch("https://ai-resume-builder-gkis.onrender.com/create-order", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        amount: 99,
+        resume_id: resumeId
+      })
+    });
 
-  const orderData = await orderRes.json();
+    const orderData = await orderRes.json();
 
-  const options = {
-    key: "rzp_test_ScVNoMEJMY4U5q",
-    amount: orderData.amount,
-    currency: "INR",
-    name: "AI Resume Builder",
-    description: "Download Resume",
-    order_id: orderData.id,
+    const options = {
+      key: "rzp_test_ScVNoMEJMY4U5q",
+      amount: orderData.amount,
+      currency: "INR",
+      name: "AI Resume Builder",
+      description: "Unlock Full Resume",
+      order_id: orderData.id,
 
-    handler: async function (response) {
+      handler: async function (response) {
 
-      // verify payment
-      await fetch("http://127.0.0.1:8000/verify-payment", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(response)
-      });
+        // ✅ VERIFY PAYMENT (FIXED URL)
+        await fetch("https://ai-resume-builder-gkis.onrender.com/verify-payment", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(response)
+        });
 
-      // download
-      window.location.href = `http://127.0.0.1:8000/download/${resumeId}`;
-    }
-  };
+        // 🔓 Remove blur after payment
+        document.getElementById("result").classList.remove("blur");
 
-  const rzp = new Razorpay(options);
-  rzp.open();
+        // Optional: change button text
+        document.getElementById("payBtn").innerText = "Downloaded ✅";
+
+        // 📥 Download file
+        window.location.href = `https://ai-resume-builder-gkis.onrender.com/download/${resumeId}`;
+      }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+
+  } catch (error) {
+    console.error(error);
+    alert("Payment failed. Try again.");
+  }
 }

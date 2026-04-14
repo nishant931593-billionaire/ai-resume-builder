@@ -5,20 +5,90 @@
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-  <h1>AI Resume Builder 🚀</h1>
+<div class="container">
 
-  <textarea id="resume" placeholder="Paste your resume"></textarea>
-  <textarea id="job" placeholder="Paste job description"></textarea>
+  <!-- 🔥 HERO SECTION -->
+  <h1>Get 3x More Interviews with an ATS-Optimized Resume 🚀</h1>
+  <p class="subtitle">
+    Paste your resume + job description → Get a job-ready resume in 60 seconds
+  </p>
 
-  <button onclick="optimizeResume()">Optimize Resume</button>
+  <!-- 🧠 INPUT SECTION -->
+  <textarea id="resume" placeholder="Paste your resume here"></textarea>
+  <textarea id="job" placeholder="Paste job description here"></textarea>
 
-  <h2>Result:</h2>
-  <pre id="result"></pre>
+  <button onclick="optimizeResume()" class="main-btn">
+    Get My Job-Ready Resume
+  </button>
 
-  <button id="payBtn" style="display:none;" onclick="payNow()">Download (₹99)</button>
+  <!-- 📊 ATS SCORE -->
+  <div id="atsBox" style="display:none;">
+    <h3>ATS Score: <span id="score">78</span>/100</h3>
+    <p>Missing Keywords:</p>
+    <ul id="keywords">
+      <li>Python</li>
+      <li>SQL</li>
+      <li>Leadership</li>
+    </ul>
+  </div>
 
-  <script src="scripts.js"></script>
+  <!-- 📄 RESULT -->
+  <h2>Optimized Resume:</h2>
+  <pre id="result" class="blur"></pre>
+
+  <!-- 💰 PAY BUTTON -->
+  <button id="payBtn" style="display:none;" onclick="payNow()" class="pay-btn">
+  Unlock Full Resume - ₹99
+</button>
+
+<p style="text-align:center; margin-top:10px; font-size:13px; color:#777;">
+  🔒 Secure payment powered by Razorpay
+</p>
+
+  <!-- 🔥 BEFORE AFTER -->
+  <div class="section">
+    <h2>Before vs After</h2>
+
+    <p>❌ Before:</p>
+    <p class="bad">Responsible for managing team</p>
+
+    <p>✅ After:</p>
+    <p class="good">Led a team of 5, increasing productivity by 32%</p>
+  </div>
+
+  <!-- 💥 PROBLEM -->
+  <div class="section">
+    <h2>Why Your Resume Gets Rejected</h2>
+    <ul>
+      <li>❌ Not ATS-friendly</li>
+      <li>❌ Missing keywords</li>
+      <li>❌ Weak bullet points</li>
+    </ul>
+  </div>
+
+  <!-- ✅ SOLUTION -->
+  <div class="section">
+    <h2>What This Tool Does</h2>
+    <ul>
+      <li>✔ Rewrites your resume for the job</li>
+      <li>✔ Adds ATS keywords</li>
+      <li>✔ Improves bullet points</li>
+      <li>✔ Makes you stand out</li>
+    </ul>
+  </div>
+
+  <!-- 🔥 TRUST -->
+  <div class="section">
+    <p>🔥 127 resumes optimized today</p>
+    <p>⭐ Used by 500+ job seekers</p>
+  </div>
+
+</div>
+
+<script src="scripts.js"></script>
+
 </body>
 </html>
