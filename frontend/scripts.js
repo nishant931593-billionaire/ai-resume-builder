@@ -62,7 +62,7 @@ async function payNow() {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        amount: 99,
+        amount: 1,
         resume_id: resumeId
       })
     });
@@ -77,7 +77,7 @@ async function payNow() {
     }
 
     const options = {
-      key: "rzp_test_Sexsv6JxTPLkar", // 🔥 Replace with live key when needed
+      key: "rzp_live_Sf2VlEoVW0rdWU", // 🔥 Replace with live key when needed
       amount: orderData.amount,
       currency: "INR",
       name: "AI Resume Builder",
