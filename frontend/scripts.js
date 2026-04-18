@@ -64,6 +64,9 @@ async function payNow() {
 
     const orderData = await orderRes.json();
     console.log("ORDER DATA:", orderData);
+    console.log("ORDER ID:", orderData.id);
+    console.log("AMOUNT:", orderData.amount);
+    console.log("KEY USED:", "rzp_test_Sexsv6JxTPLkar")
 
     const options = {
       key: "rzp_test_Sexsv6JxTPLkar",
