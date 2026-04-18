@@ -15,7 +15,7 @@ async function optimizeResume() {
   document.getElementById("result").innerText = "Optimizing your resume...";
   
   try {
-    const res = await fetch("https://ai-resume-builder-gkis.onrender.com/optimize-resume", {
+    const res = await fetch("https://ai-resume-builder-1xym.onrender.com/optimize-resume", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
@@ -53,7 +53,7 @@ async function payNow() {
 
   try {
     // Create order
-    const orderRes = await fetch("https://ai-resume-builder-gkis.onrender.com/create-order", {
+    const orderRes = await fetch("https://ai-resume-builder-1xym.onrender.com/create-order", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
@@ -76,7 +76,7 @@ async function payNow() {
       handler: async function (response) {
 
         // ✅ VERIFY PAYMENT (FIXED URL)
-        await fetch("https://ai-resume-builder-gkis.onrender.com/verify-payment", {
+        await fetch("/verify-payment", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify(response)
@@ -89,7 +89,7 @@ async function payNow() {
         document.getElementById("payBtn").innerText = "Downloaded ✅";
 
         // 📥 Download file
-        window.location.href = `https://ai-resume-builder-gkis.onrender.com/download/${resumeId}`;
+        window.location.href = `https://ai-resume-builder-1xym.onrender.com/download/${resumeId}`;
       }
     };
 
