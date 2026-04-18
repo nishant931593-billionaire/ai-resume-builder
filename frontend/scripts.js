@@ -62,7 +62,7 @@ async function payNow() {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        amount: 1,
+        amount: 4900,
         resume_id: resumeId
       })
     });
