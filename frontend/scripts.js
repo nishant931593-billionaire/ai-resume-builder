@@ -66,7 +66,7 @@ async function payNow() {
     console.log("ORDER DATA:", orderData);
 
     const options = {
-      key: "rzp_test_ScVNoMEJMY4U5q",
+      key: "rzp_test_Sexsv6JxTPLkar",
       amount: orderData.amount,
       currency: "INR",
       name: "AI Resume Builder",
