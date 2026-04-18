@@ -107,7 +107,7 @@ def create_order(data: PaymentRequest):
             raise HTTPException(status_code=404, detail="Invalid resume_id")
 
         order = razorpay_client.order.create({
-            "amount": 100,   # ✅ ₹49 FIXED PRICE
+            "amount": 4900,   # ✅ ₹49 FIXED PRICE
             "currency": "INR",
             "payment_capture": 1
         })
