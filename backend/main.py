@@ -52,7 +52,7 @@ class ResumeRequest(BaseModel):
     job_description: str
 
 class PaymentRequest(BaseModel):
-    amount: int
+    
     resume_id: str
 
 
@@ -99,6 +99,7 @@ def optimize_resume(data: ResumeRequest):
 
 
 # 🔹 Create Order
+# 🔹 Create Order
 @app.post("/create-order")
 def create_order(data: PaymentRequest):
     try:
@@ -106,7 +107,7 @@ def create_order(data: PaymentRequest):
             raise HTTPException(status_code=404, detail="Invalid resume_id")
 
         order = razorpay_client.order.create({
-            "amount": data.amount * 4900,
+            "amount": 4900,   # ✅ ₹49 FIXED PRICE
             "currency": "INR",
             "payment_capture": 1
         })
@@ -120,7 +121,6 @@ def create_order(data: PaymentRequest):
     except Exception as e:
         print("RAZORPAY ERROR:", str(e))
         raise HTTPException(status_code=500, detail=str(e))
-
 
 # 🔹 Verify Payment
 @app.post("/verify-payment")
