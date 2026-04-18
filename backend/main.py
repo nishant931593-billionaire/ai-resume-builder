@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 import os
 from dotenv import load_dotenv
@@ -10,24 +11,22 @@ import razorpay
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 
-# 🔹 Load environment variables
+# 🔹 Load ENV
 load_dotenv()
 
-# 🔹 Validate ENV (CRITICAL)
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
-    raise Exception("❌ Razorpay keys missing. Set them in environment variables.")
+    raise Exception("Razorpay keys missing")
 
 if not OPENAI_API_KEY:
-    raise Exception("❌ OpenAI API key missing.")
+    raise Exception("OpenAI API key missing")
 
-# 🔹 Initialize FastAPI
+# 🔹 App
 app = FastAPI()
 
-# 🔹 Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -36,7 +35,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🔹 Initialize clients
+# 🔹 Clients
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 razorpay_client = razorpay.Client(auth=(
@@ -44,7 +43,7 @@ razorpay_client = razorpay.Client(auth=(
     RAZORPAY_KEY_SECRET
 ))
 
-# 🔹 Temporary storage (use DB in production)
+# 🔹 Temp storage (replace with DB later)
 resume_store = {}
 
 # 🔹 Models
@@ -99,7 +98,7 @@ def optimize_resume(data: ResumeRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# 🔹 Create Razorpay Order
+# 🔹 Create Order
 @app.post("/create-order")
 def create_order(data: PaymentRequest):
     try:
@@ -107,12 +106,9 @@ def create_order(data: PaymentRequest):
             raise HTTPException(status_code=404, detail="Invalid resume_id")
 
         order = razorpay_client.order.create({
-            "amount": data.amount * 100,  # convert ₹ to paise
+            "amount": data.amount * 100,
             "currency": "INR",
-            "payment_capture": 1,
-            "notes": {
-                "resume_id": data.resume_id
-            }
+            "payment_capture": 1
         })
 
         return {
@@ -132,20 +128,22 @@ def verify_payment(payload: dict):
     try:
         razorpay_client.utility.verify_payment_signature(payload)
 
-        # 🔥 Mark resume as paid (IMPORTANT)
-        resume_id = payload.get("notes", {}).get("resume_id")
+        resume_id = payload.get("resume_id")
 
         if resume_id and resume_id in resume_store:
             resume_store[resume_id]["paid"] = True
 
-        return {"status": "Payment successful"}
+        return {
+            "status": "Payment successful",
+            "download_url": f"/download/{resume_id}"
+        }
 
     except Exception as e:
         print("VERIFY ERROR:", str(e))
         raise HTTPException(status_code=400, detail="Payment verification failed")
 
 
-# 🔹 Download Resume (Locked)
+# 🔹 Download Resume
 @app.get("/download/{resume_id}")
 def download_resume(resume_id: str):
     if resume_id not in resume_store:
@@ -167,6 +165,8 @@ def download_resume(resume_id: str):
 
     doc.build(content)
 
-    return {
-        "download_url": f"/{file_path}"
-    }
+    return FileResponse(
+        file_path,
+        media_type="application/pdf",
+        filename="resume.pdf"
+    )

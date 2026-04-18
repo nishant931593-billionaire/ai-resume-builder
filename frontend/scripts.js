@@ -11,9 +11,8 @@ async function optimizeResume() {
     return;
   }
 
-  // 🔄 Loading state
   document.getElementById("result").innerText = "Optimizing your resume...";
-  
+
   try {
     const res = await fetch("https://ai-resume-builder-1xym.onrender.com/optimize-resume", {
       method: "POST",
@@ -26,20 +25,22 @@ async function optimizeResume() {
 
     const data = await res.json();
 
-    // Show result (blurred initially)
+    if (!data.success) {
+      throw new Error(data.detail || "Optimization failed");
+    }
+
+    // Show result (blurred)
     document.getElementById("result").innerText = data.data;
     document.getElementById("result").classList.add("blur");
 
     resumeId = data.resume_id;
 
-    // 🔥 Show ATS box
+    // Show ATS box
     document.getElementById("atsBox").style.display = "block";
 
-    // (Fake dynamic score for now)
     const score = Math.floor(Math.random() * (85 - 65) + 65);
     document.getElementById("score").innerText = score;
 
-    // 🔥 Show pay button
     document.getElementById("payBtn").style.display = "block";
 
   } catch (error) {
@@ -50,9 +51,13 @@ async function optimizeResume() {
 
 
 async function payNow() {
-
   try {
-    // Create order
+    if (!resumeId) {
+      alert("Resume not generated yet!");
+      return;
+    }
+
+    // 🔹 Create order
     const orderRes = await fetch("https://ai-resume-builder-1xym.onrender.com/create-order", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
@@ -63,13 +68,16 @@ async function payNow() {
     });
 
     const orderData = await orderRes.json();
+
     console.log("ORDER DATA:", orderData);
-    console.log("ORDER ID:", orderData.id);
-    console.log("AMOUNT:", orderData.amount);
-    console.log("KEY USED:", "rzp_test_Sexsv6JxTPLkar")
+
+    if (!orderData.id) {
+      alert("Order creation failed");
+      return;
+    }
 
     const options = {
-      key: "rzp_test_Sexsv6JxTPLkar",
+      key: "rzp_test_Sexsv6JxTPLkar", // 🔥 Replace with live key when needed
       amount: orderData.amount,
       currency: "INR",
       name: "AI Resume Builder",
@@ -77,22 +85,45 @@ async function payNow() {
       order_id: orderData.id,
 
       handler: async function (response) {
+        try {
+          // 🔹 Verify payment
+          const verifyRes = await fetch("https://ai-resume-builder-1xym.onrender.com/verify-payment", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+  ...response,
+  resume_id: resumeId
+})
+          });
 
-        // ✅ VERIFY PAYMENT (FIXED URL)
-        await fetch("https://ai-resume-builder-1xym.onrender.com/verify-payment", {
-          method: "POST",
-          headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(response)
-        });
+          const verifyData = await verifyRes.json();
 
-        // 🔓 Remove blur after payment
-        document.getElementById("result").classList.remove("blur");
+          if (!verifyData.download_url) {
+            throw new Error("Payment verified but no download link");
+          }
 
-        // Optional: change button text
-        document.getElementById("payBtn").innerText = "Downloaded ✅";
+          // 🔓 Remove blur
+          document.getElementById("result").classList.remove("blur");
 
-        // 📥 Download file
-        window.location.href = `https://ai-resume-builder-1xym.onrender.com/download/${resumeId}`;
+          // Update button
+          document.getElementById("payBtn").innerText = "Downloaded ✅";
+
+          // 📥 Redirect to download
+          window.location.href = "https://ai-resume-builder-1xym.onrender.com" + verifyData.download_url;
+
+        } catch (err) {
+          console.error(err);
+          alert("Payment verified but download failed.");
+        }
+      },
+
+      prefill: {
+        name: "Test User",
+        email: "test@example.com"
+      },
+
+      theme: {
+        color: "#3399cc"
       }
     };
 
