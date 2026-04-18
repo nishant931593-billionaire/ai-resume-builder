@@ -76,7 +76,7 @@ async function payNow() {
       handler: async function (response) {
 
         // ✅ VERIFY PAYMENT (FIXED URL)
-        await fetch("/verify-payment", {
+        await fetch("https://ai-resume-builder-1xym.onrender.com/verify-payment", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
           body: JSON.stringify(response)
