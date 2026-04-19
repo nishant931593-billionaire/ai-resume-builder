@@ -2,7 +2,10 @@
 <html>
 <head>
   <title>AI Resume Builder</title>
+
+  <!-- Razorpay -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -11,83 +14,94 @@
 <div class="container">
 
   <!-- 🔥 HERO -->
-  <h1>Get More Interviews with an ATS-Optimized Resume 🚀</h1>
-  <p class="subtitle">
-    Paste your resume + job description → Get a job-ready resume in 60 seconds
-  </p>
+  <div class="hero">
+    <h1>Build a Job-Winning Resume in 60 Seconds 🚀</h1>
+    <p class="subtitle">
+      Paste your resume + job description → Get an ATS-optimized, professional resume instantly
+    </p>
+  </div>
 
-  <!-- 🧠 INPUT -->
-  <textarea id="resume" placeholder="Paste your resume here"></textarea>
-  <textarea id="job" placeholder="Paste job description here"></textarea>
+  <!-- 🧠 INPUT SECTION -->
+  <div class="card">
 
-  <button onclick="optimizeResume()" class="main-btn">
-    🚀 Optimize My Resume
-  </button>
+    <label>Your Resume</label>
+    <textarea id="resume" placeholder="Paste your resume here"></textarea>
 
-  <!-- 📊 ATS -->
-  <div id="atsBox" style="display:none;">
+    <label>Job Description</label>
+    <textarea id="job" placeholder="Paste job description here"></textarea>
+
+    <!-- 🎨 TEMPLATE SELECT -->
+    <label>Select Resume Template</label>
+    <select id="template">
+      <option value="modern">Modern (Recommended)</option>
+      <option value="minimal">ATS Friendly</option>
+      <option value="creative">Creative</option>
+    </select>
+
+    <button onclick="optimizeResume()" class="main-btn">
+      🚀 Optimize My Resume
+    </button>
+
+  </div>
+
+  <!-- 📊 ATS SCORE -->
+  <div id="atsBox" class="card" style="display:none;">
     <h3>ATS Score: <span id="score">78</span>/100</h3>
 
     <p>Missing Keywords:</p>
-    <ul id="keywords">
-      <li>Python</li>
-      <li>SQL</li>
-      <li>Leadership</li>
-    </ul>
+    <ul id="keywords"></ul>
   </div>
 
   <!-- 📄 RESULT -->
-  <h2>Optimized Resume:</h2>
-  <pre id="result" class="blur"></pre>
+  <div class="card">
+    <h2>Optimized Resume</h2>
+    <pre id="result" class="blur"></pre>
+  </div>
 
-  <!-- 🔥 VALUE INFO -->
-  <div id="extraInfo"></div>
+  <!-- 💰 PAYMENT -->
+  <div id="paymentSection" class="card" style="display:none; text-align:center;">
 
-  <!-- 💰 PAYMENT SECTION (SINGLE PRICE ₹99) -->
-  <div id="paymentSection" style="display:none; text-align:center; margin-top:20px;">
+    <h3>Unlock Your Premium Resume</h3>
 
-    <!-- PRICE (FIXED) -->
-    <h3>Unlock Full Optimized Resume</h3>
-    <p style="font-size:18px; font-weight:bold;">
-      ₹99 Only (One-time payment)
-    </p>
+    <p class="price">₹99 Only</p>
 
-    <!-- URGENCY -->
-    <p style="color:red; font-weight:bold;">
+    <p class="warning">
       ⚠ This optimized version may not be saved
     </p>
 
-    <!-- CTA -->
     <button id="payBtn" onclick="payNow()" class="pay-btn">
-      🚀 Download My Resume for ₹99
+      🚀 Download My Resume
     </button>
 
-    <!-- TRUST -->
-    <p style="margin-top:10px; font-size:13px; color:#777;">
-      ✔ Pay only if you find it useful<br>
-      🔒 Secure payment powered by Razorpay
+    <p class="trust">
+      ✔ Pay only if satisfied <br>
+      🔒 Secure Razorpay payment
     </p>
 
   </div>
 
-  <!-- 🔥 BEFORE AFTER -->
+  <!-- 🔥 VALUE SECTION -->
   <div class="section">
     <h2>Before vs After</h2>
 
-    <p>❌ Before:</p>
-    <p class="bad">Responsible for managing team</p>
+    <div class="compare">
+      <div class="bad-box">
+        ❌ Responsible for managing team
+      </div>
 
-    <p>✅ After:</p>
-    <p class="good">Led a team of 5, increasing productivity by 32%</p>
+      <div class="good-box">
+        ✅ Led a team of 5, increasing productivity by 32%
+      </div>
+    </div>
   </div>
 
   <!-- 💥 PROBLEM -->
   <div class="section">
-    <h2>Why Your Resume Gets Rejected</h2>
+    <h2>Why Most Resumes Get Rejected</h2>
     <ul>
       <li>❌ Not ATS-friendly</li>
       <li>❌ Missing keywords</li>
-      <li>❌ Weak bullet points</li>
+      <li>❌ Weak achievements</li>
     </ul>
   </div>
 
@@ -96,14 +110,14 @@
     <h2>What This Tool Does</h2>
     <ul>
       <li>✔ Rewrites your resume professionally</li>
-      <li>✔ Adds ATS keywords from job description</li>
+      <li>✔ Adds job-specific ATS keywords</li>
       <li>✔ Improves bullet points</li>
       <li>✔ Makes you interview-ready</li>
     </ul>
   </div>
 
   <!-- 🔥 SOCIAL PROOF -->
-  <div class="section">
+  <div class="section social-proof">
     <p>🔥 127 resumes optimized today</p>
     <p>⭐ Used by 500+ job seekers</p>
   </div>

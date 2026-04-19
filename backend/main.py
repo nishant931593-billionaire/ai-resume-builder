@@ -7,12 +7,14 @@ import os
 import time
 import hmac
 import hashlib
+import uuid
+
 from dotenv import load_dotenv
 from openai import OpenAI
 import razorpay
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
+from jinja2 import Template
+from weasyprint import HTML
 
 
 # 🔹 ENV
@@ -47,17 +49,21 @@ razorpay_client = razorpay.Client(auth=(
 ))
 
 
-# 🔹 In-memory storage (MVP only)
+# 🔹 Storage
 resume_store = {}
 
-# 🔹 Fixed price (₹99 only)
+# 🔹 Price ₹99
 PRICE = 9900
+
+# 🔹 Ensure folders
+os.makedirs("generated", exist_ok=True)
 
 
 # 🔹 Models
 class ResumeRequest(BaseModel):
     resume: str
     job_description: str
+    template: str = "modern"   # 👈 NEW
 
 
 class PaymentRequest(BaseModel):
@@ -113,6 +119,8 @@ JOB DESCRIPTION:
             "content": result,
             "paid": False,
             "order_id": None,
+            "template": data.template,   # 👈 store template
+            "file": None,
             "created_at": time.time()
         }
 
@@ -163,10 +171,9 @@ def verify_payment(payload: dict):
             raise HTTPException(status_code=400, detail="Invalid resume")
 
         stored_order = resume_store[resume_id].get("order_id")
-        if not stored_order or stored_order != payload.get("razorpay_order_id"):
+        if stored_order != payload.get("razorpay_order_id"):
             raise HTTPException(status_code=400, detail="Order mismatch")
 
-        # 🔐 Signature verification (secure way)
         generated_signature = hmac.new(
             RAZORPAY_KEY_SECRET.encode(),
             f"{payload['razorpay_order_id']}|{payload['razorpay_payment_id']}".encode(),
@@ -188,6 +195,33 @@ def verify_payment(payload: dict):
         raise HTTPException(status_code=400, detail="Payment failed")
 
 
+# ---------------- PDF GENERATION ----------------
+def generate_pdf(resume_id: str):
+    data = resume_store[resume_id]
+    template_name = data.get("template", "modern")
+
+    with open(f"templates/{template_name}.html", "r", encoding="utf-8") as f:
+        html_template = Template(f.read())
+
+    rendered_html = html_template.render(
+        name="Your Name",
+        email="your@email.com",
+        phone="1234567890",
+        skills=data["content"],
+        experience=data["content"],
+        education=data["content"]
+    )
+
+    file_name = f"{uuid.uuid4().hex}.pdf"
+    file_path = f"generated/{file_name}"
+
+    HTML(string=rendered_html).write_pdf(file_path)
+
+    resume_store[resume_id]["file"] = file_path
+
+    return file_path
+
+
 # ---------------- DOWNLOAD ----------------
 @app.get("/download/{resume_id}")
 def download_resume(resume_id: str):
@@ -197,18 +231,11 @@ def download_resume(resume_id: str):
     if not resume_store[resume_id]["paid"]:
         raise HTTPException(status_code=403, detail="Payment required")
 
-    file_path = f"{resume_id}.pdf"
+    # generate only once
+    if not resume_store[resume_id]["file"]:
+        generate_pdf(resume_id)
 
-    doc = SimpleDocTemplate(file_path)
-    styles = getSampleStyleSheet()
-
-    content = []
-    text = resume_store[resume_id]["content"]
-
-    for line in text.split("\n"):
-        content.append(Paragraph(line, styles["Normal"]))
-
-    doc.build(content)
+    file_path = resume_store[resume_id]["file"]
 
     return FileResponse(
         file_path,
