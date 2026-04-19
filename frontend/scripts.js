@@ -24,6 +24,13 @@ function renderResumePreview(data) {
     });
   }
 
+  if (data.projects?.length) {
+  html += `\n🔹 Projects:\n`;
+  data.projects.forEach(p => {
+    html += `• ${p}\n`;
+  });
+}
+
   if (data.education?.length) {
     html += `\n🔹 Education:\n`;
     data.education.forEach(ed => {

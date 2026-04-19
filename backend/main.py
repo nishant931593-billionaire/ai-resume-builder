@@ -82,37 +82,43 @@ def home():
 def optimize_resume(data: ResumeRequest):
     try:
         prompt = f"""
-You are an expert ATS resume writer.
+You are a world-class ATS resume writer.
 
-Your task is to:
-- Rewrite and enhance the resume using the job description
-- Make it detailed, impactful, and recruiter-ready
-- Expand bullet points with measurable achievements
-- Add missing but relevant skills if clearly implied
-- Use strong action verbs
+Your job is to transform the resume into a HIGH-QUALITY, DETAILED, PROFESSIONAL resume.
 
-IMPORTANT RULES:
-- DO NOT keep it short
-- Each experience should have 2-5 bullet points
-- Add numbers, impact, and results wherever possible
-- Keep professional tone
-- Make it look like a high-quality paid resume
+GOALS:
+- Make the resume look like a premium ₹500+ resume
+- Expand all sections with strong, detailed content
+- Improve weak points with better phrasing and impact
 
-RETURN ONLY VALID JSON (no explanation):
+STRICT RULES:
+
+1. DO NOT keep it short
+2. Skills: minimum 8-12 items
+3. Experience:
+   - At least 5-8 bullet points
+   - Each bullet must be detailed (minimum 15-25 words)
+   - Use action verbs + impact + results
+4. Projects:
+   - Add 2-4 strong project descriptions if missing
+   - Each with 2-4 bullet points
+5. Education: keep clean but professional
+6. Add missing sections if needed (Projects, Achievements, Certifications)
+7. Use ATS-friendly keywords from job description
+8. Make beginner experience look strong (but realistic)
+
+FORMAT:
+
+Return ONLY valid JSON:
 
 {{
   "name": "",
   "email": "",
   "phone": "",
-  "skills": ["", "", "", "", ""],
-  "experience": [
-    "",
-    "",
-    ""
-  ],
-  "education": [
-    ""
-  ]
+  "skills": ["", "", "", "", "", "", "", ""],
+  "experience": ["", "", "", "", "", "", ""],
+  "projects": ["", "", ""],
+  "education": ["", ""]
 }}
 
 RESUME:
@@ -121,6 +127,7 @@ RESUME:
 JOB DESCRIPTION:
 {data.job_description}
 """
+       
  
 
         response = openai_client.chat.completions.create(
@@ -217,7 +224,8 @@ def generate_pdf(resume_id: str):
         phone=data.get("phone", ""),
         skills=data.get("skills", []),
         experience=data.get("experience", []),
-        education=data.get("education", [])
+        education=data.get("education", []),
+        projects=data.get("projects", [])
     )
 
     file_name = f"{uuid.uuid4().hex}.pdf"
