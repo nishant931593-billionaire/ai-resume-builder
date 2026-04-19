@@ -4,12 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 import os
+import time
+import hmac
+import hashlib
 from dotenv import load_dotenv
 from openai import OpenAI
 import razorpay
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
+
 
 # 🔹 ENV
 load_dotenv()
@@ -20,6 +24,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 if not all([RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, OPENAI_API_KEY]):
     raise Exception("Missing environment variables")
+
 
 # 🔹 App
 app = FastAPI()
@@ -32,6 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # 🔹 Clients
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -40,11 +46,13 @@ razorpay_client = razorpay.Client(auth=(
     RAZORPAY_KEY_SECRET
 ))
 
-# 🔹 Storage
+
+# 🔹 In-memory storage (MVP only)
 resume_store = {}
 
-# 🔹 Only ONE PLAN
-PRICE = 9900  # ₹99
+# 🔹 Fixed price (₹99 only)
+PRICE = 9900
+
 
 # 🔹 Models
 class ResumeRequest(BaseModel):
@@ -56,12 +64,13 @@ class PaymentRequest(BaseModel):
     resume_id: str
 
 
+# ---------------- HOME ----------------
 @app.get("/")
 def home():
     return {"message": "AI Resume Builder Live 🚀"}
 
 
-# 🔥 PREMIUM OUTPUT ONLY
+# ---------------- OPTIMIZE RESUME ----------------
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
     try:
@@ -69,18 +78,17 @@ def optimize_resume(data: ResumeRequest):
             raise HTTPException(status_code=400, detail="Missing input")
 
         prompt = f"""
-You are a top-tier ATS resume writer.
+You are an expert ATS resume writer.
 
 TASK:
 - Rewrite full resume professionally
 - Add strong action verbs
 - Add ATS keywords from job description
-- Add measurable achievements (numbers if possible)
-- Make it recruiter-ready for top companies
+- Add measurable achievements
+- Make it recruiter-ready
 
 OUTPUT:
-- Clean final resume only
-- No explanations
+Only final optimized resume.
 
 RESUME:
 {data.resume}
@@ -103,7 +111,9 @@ JOB DESCRIPTION:
 
         resume_store[resume_id] = {
             "content": result,
-            "paid": False
+            "paid": False,
+            "order_id": None,
+            "created_at": time.time()
         }
 
         return {
@@ -113,11 +123,11 @@ JOB DESCRIPTION:
         }
 
     except Exception as e:
-        print("ERROR:", str(e))
+        print("OPTIMIZE ERROR:", str(e))
         raise HTTPException(status_code=500, detail="Optimization failed")
 
 
-# 🔥 SINGLE PRICE ORDER (₹99 ONLY)
+# ---------------- CREATE ORDER ----------------
 @app.post("/create-order")
 def create_order(data: PaymentRequest):
     try:
@@ -143,20 +153,28 @@ def create_order(data: PaymentRequest):
         raise HTTPException(status_code=500, detail="Order failed")
 
 
-# 🔥 VERIFY PAYMENT
+# ---------------- VERIFY PAYMENT ----------------
 @app.post("/verify-payment")
 def verify_payment(payload: dict):
     try:
-        razorpay_client.utility.verify_payment_signature(payload)
-
         resume_id = payload.get("resume_id")
-        order_id = payload.get("razorpay_order_id")
 
         if not resume_id or resume_id not in resume_store:
             raise HTTPException(status_code=400, detail="Invalid resume")
 
-        if resume_store[resume_id].get("order_id") != order_id:
+        stored_order = resume_store[resume_id].get("order_id")
+        if not stored_order or stored_order != payload.get("razorpay_order_id"):
             raise HTTPException(status_code=400, detail="Order mismatch")
+
+        # 🔐 Signature verification (secure way)
+        generated_signature = hmac.new(
+            RAZORPAY_KEY_SECRET.encode(),
+            f"{payload['razorpay_order_id']}|{payload['razorpay_payment_id']}".encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+        if generated_signature != payload.get("razorpay_signature"):
+            raise HTTPException(status_code=400, detail="Invalid signature")
 
         resume_store[resume_id]["paid"] = True
 
@@ -170,7 +188,7 @@ def verify_payment(payload: dict):
         raise HTTPException(status_code=400, detail="Payment failed")
 
 
-# 🔥 DOWNLOAD (PROTECTED)
+# ---------------- DOWNLOAD ----------------
 @app.get("/download/{resume_id}")
 def download_resume(resume_id: str):
     if resume_id not in resume_store:
