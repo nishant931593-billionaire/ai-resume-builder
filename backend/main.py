@@ -51,7 +51,7 @@ razorpay_client = razorpay.Client(auth=(
 resume_store = {}
 
 # 🔹 Fixed price (₹99 only)
-PRICE = 100
+PRICE = 9900
 
 
 # 🔹 Models
