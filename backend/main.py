@@ -53,7 +53,7 @@ razorpay_client = razorpay.Client(auth=(
 resume_store = {}
 
 # 🔹 Price ₹99
-PRICE = 9900
+PRICE = 100
 
 # 🔹 Ensure folders
 os.makedirs("generated", exist_ok=True)
