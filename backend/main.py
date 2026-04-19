@@ -26,7 +26,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # restrict in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,8 +40,17 @@ razorpay_client = razorpay.Client(auth=(
     RAZORPAY_KEY_SECRET
 ))
 
-# 🔹 Temp storage (replace with DB later)
+# 🔹 Temporary storage
 resume_store = {}
+
+# 🔹 Pricing (server-side only)
+PRICING = {
+    "basic": 4900,
+    "pro": 9900,
+    "premium": 19900
+}
+
+VALID_PLANS = ["basic", "pro", "premium"]
 
 # 🔹 Models
 class ResumeRequest(BaseModel):
@@ -50,23 +59,15 @@ class ResumeRequest(BaseModel):
 
 class PaymentRequest(BaseModel):
     resume_id: str
-    plan: str = "basic"   # basic / pro / premium
-
-
-# 🔹 Pricing Map
-PRICING = {
-    "basic": 4900,    # ₹49
-    "pro": 9900,      # ₹99
-    "premium": 19900  # ₹199
-}
+    plan: str
 
 
 @app.get("/")
 def home():
-    return {"message": "AI Resume Builder Live 🚀"}
+    return {"message": "AI Resume Builder Secure 🚀"}
 
 
-# 🔥 OPTIMIZE RESUME (improved prompt for better results)
+# 🔥 OPTIMIZE RESUME
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
     try:
@@ -76,16 +77,9 @@ def optimize_resume(data: ResumeRequest):
         prompt = f"""
 You are a professional ATS resume optimizer.
 
-TASK:
-- Improve the resume based on the job description
-- Add relevant keywords for ATS
-- Rewrite bullet points with strong action verbs
-- Make it concise, impactful, and results-oriented
-- Ensure it matches the job role
-
-OUTPUT FORMAT:
-- Clean resume format
-- Strong bullet points
+- Rewrite resume with strong bullet points
+- Add relevant keywords from job description
+- Make it concise and impactful
 - No explanations, only final resume
 
 RESUME:
@@ -98,7 +92,7 @@ JOB DESCRIPTION:
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are an expert ATS resume writer."},
+                {"role": "system", "content": "Expert ATS resume writer"},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -124,14 +118,18 @@ JOB DESCRIPTION:
         raise HTTPException(status_code=500, detail="Optimization failed")
 
 
-# 🔥 CREATE ORDER (dynamic pricing)
+# 🔥 CREATE ORDER (SECURE)
 @app.post("/create-order")
 def create_order(data: PaymentRequest):
     try:
         if data.resume_id not in resume_store:
             raise HTTPException(status_code=404, detail="Invalid resume_id")
 
-        amount = PRICING.get(data.plan, 4900)
+        # 🔐 Validate plan
+        if data.plan not in VALID_PLANS:
+            raise HTTPException(status_code=400, detail="Invalid plan")
+
+        amount = PRICING[data.plan]
 
         order = razorpay_client.order.create({
             "amount": amount,
@@ -139,31 +137,39 @@ def create_order(data: PaymentRequest):
             "payment_capture": 1
         })
 
-        # store plan
+        # Store plan securely
         resume_store[data.resume_id]["plan"] = data.plan
+        resume_store[data.resume_id]["order_id"] = order["id"]
 
         return {
             "id": order["id"],
             "amount": order["amount"],
-            "currency": order["currency"],
-            "plan": data.plan
+            "currency": order["currency"]
         }
 
     except Exception as e:
-        print("RAZORPAY ERROR:", str(e))
-        raise HTTPException(status_code=500, detail="Payment failed")
+        print("ORDER ERROR:", str(e))
+        raise HTTPException(status_code=500, detail="Order creation failed")
 
 
-# 🔥 VERIFY PAYMENT
+# 🔥 VERIFY PAYMENT (SECURE)
 @app.post("/verify-payment")
 def verify_payment(payload: dict):
     try:
+        # Verify signature
         razorpay_client.utility.verify_payment_signature(payload)
 
         resume_id = payload.get("resume_id")
+        order_id = payload.get("razorpay_order_id")
 
-        if resume_id and resume_id in resume_store:
-            resume_store[resume_id]["paid"] = True
+        if not resume_id or resume_id not in resume_store:
+            raise HTTPException(status_code=400, detail="Invalid resume_id")
+
+        # 🔐 Match order_id
+        if resume_store[resume_id].get("order_id") != order_id:
+            raise HTTPException(status_code=400, detail="Order mismatch")
+
+        resume_store[resume_id]["paid"] = True
 
         return {
             "status": "Payment successful",
@@ -175,7 +181,7 @@ def verify_payment(payload: dict):
         raise HTTPException(status_code=400, detail="Payment verification failed")
 
 
-# 🔥 DOWNLOAD RESUME
+# 🔥 DOWNLOAD RESUME (PROTECTED)
 @app.get("/download/{resume_id}")
 def download_resume(resume_id: str):
     if resume_id not in resume_store:

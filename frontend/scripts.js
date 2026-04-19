@@ -2,18 +2,21 @@ console.log("JS Loaded");
 
 let resumeId = "";
 let selectedPlan = "pro"; // default high-conversion plan
+let currentOrderId = "";
 
 // 🔥 Optimize Resume
 async function optimizeResume() {
-  const resume = document.getElementById("resume").value;
-  const job = document.getElementById("job").value;
+  const resume = document.getElementById("resume").value.trim();
+  const job = document.getElementById("job").value.trim();
 
   if (!resume || !job) {
     alert("Please fill both fields");
     return;
   }
 
-  document.getElementById("result").innerText = "Optimizing your resume for better job matches...";
+  const resultBox = document.getElementById("result");
+  resultBox.innerText = "Optimizing your resume for better job matches...";
+  resultBox.classList.remove("blur");
 
   try {
     const res = await fetch("https://ai-resume-builder-1xym.onrender.com/optimize-resume", {
@@ -34,16 +37,15 @@ async function optimizeResume() {
     resumeId = data.resume_id;
 
     // 🔥 Show blurred result
-    document.getElementById("result").innerText = data.data;
-    document.getElementById("result").classList.add("blur");
+    resultBox.innerText = data.data;
+    resultBox.classList.add("blur");
 
-    // 🔥 ATS Score (more believable range)
+    // 🔥 ATS Score
     const score = Math.floor(Math.random() * (82 - 68) + 68);
     document.getElementById("score").innerText = score;
-
     document.getElementById("atsBox").style.display = "block";
 
-    // 🔥 Add value + urgency text dynamically
+    // 🔥 Value + urgency
     document.getElementById("extraInfo").innerHTML = `
       <p>✅ Resume optimized for your target role</p>
       <p>✅ ATS keywords added</p>
@@ -51,10 +53,10 @@ async function optimizeResume() {
       <p>⭐ Most users choose Pro (₹99)</p>
     `;
 
-    // Show pricing + button
+    // Show payment section
     document.getElementById("paymentSection").style.display = "block";
 
-    // 🔥 Auto follow-up trigger (after 20 sec)
+    // 🔥 Follow-up trigger
     setTimeout(() => {
       if (resumeId) {
         alert("Want to download your optimized resume? 🚀");
@@ -63,12 +65,12 @@ async function optimizeResume() {
 
   } catch (error) {
     console.error(error);
-    document.getElementById("result").innerText = "Something went wrong. Try again.";
+    resultBox.innerText = "Something went wrong. Try again.";
   }
 }
 
 
-// 🔥 Select Plan (call this from buttons)
+// 🔥 Select Plan
 function selectPlan(plan) {
   selectedPlan = plan;
 
@@ -87,7 +89,11 @@ async function payNow() {
       return;
     }
 
-    // 🔹 Create order with selected plan
+    const payBtn = document.getElementById("payBtn");
+    payBtn.disabled = true;
+    payBtn.innerText = "Processing...";
+
+    // 🔹 Create order
     const orderRes = await fetch("https://ai-resume-builder-1xym.onrender.com/create-order", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
@@ -100,9 +106,10 @@ async function payNow() {
     const orderData = await orderRes.json();
 
     if (!orderData.id) {
-      alert("Order creation failed");
-      return;
+      throw new Error("Order creation failed");
     }
+
+    currentOrderId = orderData.id;
 
     const options = {
       key: "rzp_live_Sf2VlEoVW0rdWU",
@@ -118,7 +125,9 @@ async function payNow() {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
-              ...response,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
               resume_id: resumeId
             })
           });
@@ -132,8 +141,8 @@ async function payNow() {
           // 🔓 Remove blur
           document.getElementById("result").classList.remove("blur");
 
-          // 🔥 Button update
-          document.getElementById("payBtn").innerText = "Downloaded ✅";
+          // ✅ Update button
+          payBtn.innerText = "Downloaded ✅";
 
           // 📥 Download
           window.location.href =
@@ -142,6 +151,8 @@ async function payNow() {
         } catch (err) {
           console.error(err);
           alert("Payment verified but download failed.");
+          payBtn.disabled = false;
+          payBtn.innerText = "Try Again";
         }
       },
 
@@ -156,10 +167,21 @@ async function payNow() {
     };
 
     const rzp = new Razorpay(options);
+
+    // ❌ Payment failed handler
+    rzp.on("payment.failed", function (response) {
+      console.error(response.error);
+      alert("Payment failed. Try again.");
+      payBtn.disabled = false;
+      payBtn.innerText = "Try Again";
+    });
+
     rzp.open();
 
   } catch (error) {
     console.error(error);
     alert("Payment failed. Try again.");
+    document.getElementById("payBtn").disabled = false;
+    document.getElementById("payBtn").innerText = "Try Again";
   }
 }
