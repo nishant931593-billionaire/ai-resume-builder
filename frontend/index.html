@@ -7,6 +7,9 @@
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
   <link rel="stylesheet" href="style.css">
+
+  <!-- Optional: remove favicon error -->
+  <link rel="icon" href="data:,">
 </head>
 
 <body>
@@ -46,7 +49,7 @@
 
   <!-- 📊 ATS SCORE -->
   <div id="atsBox" class="card" style="display:none;">
-    <h3>ATS Score: <span id="score">78</span>/100</h3>
+    <h3>ATS Score: <span id="score">0</span>/100</h3>
 
     <p>Missing Keywords:</p>
     <ul id="keywords"></ul>
@@ -58,12 +61,15 @@
     <pre id="result" class="blur"></pre>
   </div>
 
+  <!-- 🔥 EXTRA INFO (FIXED BUG) -->
+  <div id="extraInfo" class="card"></div>
+
   <!-- 💰 PAYMENT -->
   <div id="paymentSection" class="card" style="display:none; text-align:center;">
 
     <h3>Unlock Your Premium Resume</h3>
 
-    <p class="price">₹99 Only</p>
+    <p class="price">₹49 Only</p>
 
     <p class="warning">
       ⚠ This optimized version may not be saved
