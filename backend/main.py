@@ -11,7 +11,7 @@ import razorpay
 from reportlab.platypus import SimpleDocTemplate, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 
-# 🔹 Load ENV
+# 🔹 ENV
 load_dotenv()
 
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
@@ -26,7 +26,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # restrict in production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,34 +40,28 @@ razorpay_client = razorpay.Client(auth=(
     RAZORPAY_KEY_SECRET
 ))
 
-# 🔹 Temporary storage
+# 🔹 Storage
 resume_store = {}
 
-# 🔹 Pricing (server-side only)
-PRICING = {
-    "basic": 4900,
-    "pro": 9900,
-    "premium": 19900
-}
-
-VALID_PLANS = ["basic", "pro", "premium"]
+# 🔹 Only ONE PLAN
+PRICE = 9900  # ₹99
 
 # 🔹 Models
 class ResumeRequest(BaseModel):
     resume: str
     job_description: str
 
+
 class PaymentRequest(BaseModel):
     resume_id: str
-    plan: str
 
 
 @app.get("/")
 def home():
-    return {"message": "AI Resume Builder Secure 🚀"}
+    return {"message": "AI Resume Builder Live 🚀"}
 
 
-# 🔥 OPTIMIZE RESUME
+# 🔥 PREMIUM OUTPUT ONLY
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
     try:
@@ -75,12 +69,18 @@ def optimize_resume(data: ResumeRequest):
             raise HTTPException(status_code=400, detail="Missing input")
 
         prompt = f"""
-You are a professional ATS resume optimizer.
+You are a top-tier ATS resume writer.
 
-- Rewrite resume with strong bullet points
-- Add relevant keywords from job description
-- Make it concise and impactful
-- No explanations, only final resume
+TASK:
+- Rewrite full resume professionally
+- Add strong action verbs
+- Add ATS keywords from job description
+- Add measurable achievements (numbers if possible)
+- Make it recruiter-ready for top companies
+
+OUTPUT:
+- Clean final resume only
+- No explanations
 
 RESUME:
 {data.resume}
@@ -92,7 +92,7 @@ JOB DESCRIPTION:
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "Expert ATS resume writer"},
+                {"role": "system", "content": "Expert resume optimizer"},
                 {"role": "user", "content": prompt}
             ]
         )
@@ -103,8 +103,7 @@ JOB DESCRIPTION:
 
         resume_store[resume_id] = {
             "content": result,
-            "paid": False,
-            "plan": None
+            "paid": False
         }
 
         return {
@@ -114,31 +113,23 @@ JOB DESCRIPTION:
         }
 
     except Exception as e:
-        print("OPTIMIZE ERROR:", str(e))
+        print("ERROR:", str(e))
         raise HTTPException(status_code=500, detail="Optimization failed")
 
 
-# 🔥 CREATE ORDER (SECURE)
+# 🔥 SINGLE PRICE ORDER (₹99 ONLY)
 @app.post("/create-order")
 def create_order(data: PaymentRequest):
     try:
         if data.resume_id not in resume_store:
             raise HTTPException(status_code=404, detail="Invalid resume_id")
 
-        # 🔐 Validate plan
-        if data.plan not in VALID_PLANS:
-            raise HTTPException(status_code=400, detail="Invalid plan")
-
-        amount = PRICING[data.plan]
-
         order = razorpay_client.order.create({
-            "amount": amount,
+            "amount": PRICE,
             "currency": "INR",
             "payment_capture": 1
         })
 
-        # Store plan securely
-        resume_store[data.resume_id]["plan"] = data.plan
         resume_store[data.resume_id]["order_id"] = order["id"]
 
         return {
@@ -149,23 +140,21 @@ def create_order(data: PaymentRequest):
 
     except Exception as e:
         print("ORDER ERROR:", str(e))
-        raise HTTPException(status_code=500, detail="Order creation failed")
+        raise HTTPException(status_code=500, detail="Order failed")
 
 
-# 🔥 VERIFY PAYMENT (SECURE)
+# 🔥 VERIFY PAYMENT
 @app.post("/verify-payment")
 def verify_payment(payload: dict):
     try:
-        # Verify signature
         razorpay_client.utility.verify_payment_signature(payload)
 
         resume_id = payload.get("resume_id")
         order_id = payload.get("razorpay_order_id")
 
         if not resume_id or resume_id not in resume_store:
-            raise HTTPException(status_code=400, detail="Invalid resume_id")
+            raise HTTPException(status_code=400, detail="Invalid resume")
 
-        # 🔐 Match order_id
         if resume_store[resume_id].get("order_id") != order_id:
             raise HTTPException(status_code=400, detail="Order mismatch")
 
@@ -178,14 +167,14 @@ def verify_payment(payload: dict):
 
     except Exception as e:
         print("VERIFY ERROR:", str(e))
-        raise HTTPException(status_code=400, detail="Payment verification failed")
+        raise HTTPException(status_code=400, detail="Payment failed")
 
 
-# 🔥 DOWNLOAD RESUME (PROTECTED)
+# 🔥 DOWNLOAD (PROTECTED)
 @app.get("/download/{resume_id}")
 def download_resume(resume_id: str):
     if resume_id not in resume_store:
-        raise HTTPException(status_code=404, detail="Resume not found")
+        raise HTTPException(status_code=404, detail="Not found")
 
     if not resume_store[resume_id]["paid"]:
         raise HTTPException(status_code=403, detail="Payment required")
@@ -206,5 +195,5 @@ def download_resume(resume_id: str):
     return FileResponse(
         file_path,
         media_type="application/pdf",
-        filename="optimized_resume.pdf"
+        filename="resume.pdf"
     )

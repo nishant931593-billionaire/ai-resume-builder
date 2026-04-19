@@ -1,7 +1,6 @@
 console.log("JS Loaded");
 
 let resumeId = "";
-let selectedPlan = "pro"; // default high-conversion plan
 let currentOrderId = "";
 
 // 🔥 Optimize Resume
@@ -21,7 +20,7 @@ async function optimizeResume() {
   try {
     const res = await fetch("https://ai-resume-builder-1xym.onrender.com/optimize-resume", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         resume: resume,
         job_description: job
@@ -40,23 +39,23 @@ async function optimizeResume() {
     resultBox.innerText = data.data;
     resultBox.classList.add("blur");
 
-    // 🔥 ATS Score
+    // 🔥 ATS Score (UI only)
     const score = Math.floor(Math.random() * (82 - 68) + 68);
     document.getElementById("score").innerText = score;
     document.getElementById("atsBox").style.display = "block";
 
-    // 🔥 Value + urgency
+    // 🔥 Value + urgency (no plan confusion now)
     document.getElementById("extraInfo").innerHTML = `
-      <p>✅ Resume optimized for your target role</p>
-      <p>✅ ATS keywords added</p>
-      <p>⚠ This optimized version may not be saved</p>
-      <p>⭐ Most users choose Pro (₹99)</p>
+      <p>✅ Resume fully optimized for ATS</p>
+      <p>✅ Keywords added based on job description</p>
+      <p>⚠ This optimized version is locked</p>
+      <p>🔥 Unlock full resume for ₹99</p>
     `;
 
     // Show payment section
     document.getElementById("paymentSection").style.display = "block";
 
-    // 🔥 Follow-up trigger
+    // 🔥 Follow-up nudge
     setTimeout(() => {
       if (resumeId) {
         alert("Want to download your optimized resume? 🚀");
@@ -70,18 +69,7 @@ async function optimizeResume() {
 }
 
 
-// 🔥 Select Plan
-function selectPlan(plan) {
-  selectedPlan = plan;
-
-  document.getElementById("selectedPlan").innerText =
-    plan === "basic" ? "₹49" :
-    plan === "pro" ? "₹99" :
-    "₹199";
-}
-
-
-// 🔥 Payment Flow
+// 🔥 PAYMENT FLOW (₹99 ONLY)
 async function payNow() {
   try {
     if (!resumeId) {
@@ -93,13 +81,12 @@ async function payNow() {
     payBtn.disabled = true;
     payBtn.innerText = "Processing...";
 
-    // 🔹 Create order
+    // 🔹 Create order (NO PLAN)
     const orderRes = await fetch("https://ai-resume-builder-1xym.onrender.com/create-order", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        resume_id: resumeId,
-        plan: selectedPlan
+        resume_id: resumeId
       })
     });
 
@@ -116,14 +103,14 @@ async function payNow() {
       amount: orderData.amount,
       currency: "INR",
       name: "AI Resume Builder",
-      description: "Download Optimized Resume",
+      description: "Unlock Your Optimized Resume (₹99)",
       order_id: orderData.id,
 
       handler: async function (response) {
         try {
           const verifyRes = await fetch("https://ai-resume-builder-1xym.onrender.com/verify-payment", {
             method: "POST",
-            headers: {"Content-Type": "application/json"},
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -138,13 +125,13 @@ async function payNow() {
             throw new Error("No download link");
           }
 
-          // 🔓 Remove blur
+          // 🔓 Unlock UI
           document.getElementById("result").classList.remove("blur");
 
-          // ✅ Update button
+          // ✅ Button update
           payBtn.innerText = "Downloaded ✅";
 
-          // 📥 Download
+          // 📥 Download file
           window.location.href =
             "https://ai-resume-builder-1xym.onrender.com" + verifyData.download_url;
 
@@ -181,7 +168,9 @@ async function payNow() {
   } catch (error) {
     console.error(error);
     alert("Payment failed. Try again.");
-    document.getElementById("payBtn").disabled = false;
-    document.getElementById("payBtn").innerText = "Try Again";
+
+    const payBtn = document.getElementById("payBtn");
+    payBtn.disabled = false;
+    payBtn.innerText = "Try Again";
   }
 }
