@@ -45,9 +45,9 @@ resume_store = {}
 
 # 🔹 Pricing (server-side only)
 PRICING = {
-    "basic": 100,
-    "pro": 200,
-    "premium": 300
+    "basic": 4900,
+    "pro": 9900,
+    "premium": 19900
 }
 
 VALID_PLANS = ["basic", "pro", "premium"]
