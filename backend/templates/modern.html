@@ -2,27 +2,79 @@
 <html>
 <head>
 <style>
-body { font-family: Arial; margin: 0; }
-.container { display: flex; }
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  color: #2c3e50;
+}
+
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* LEFT SIDEBAR */
 .left {
   width: 30%;
   background: #2c3e50;
   color: white;
-  padding: 20px;
+  padding: 25px;
 }
-.right { width: 70%; padding: 30px; }
-h1 { margin: 0; font-size: 26px; }
-.section { margin-top: 20px; }
+
+.left h1 {
+  margin-bottom: 10px;
+  font-size: 24px;
+}
+
+.left p {
+  font-size: 13px;
+  margin: 5px 0;
+}
+
+/* RIGHT CONTENT */
+.right {
+  width: 70%;
+  padding: 30px;
+  background: #fff;
+}
+
+/* SECTION */
+.section {
+  margin-bottom: 25px;
+}
+
 .section h2 {
+  font-size: 16px;
+  color: #3498db;
   border-bottom: 2px solid #3498db;
   padding-bottom: 5px;
+  margin-bottom: 10px;
 }
-p { line-height: 1.6; }
+
+/* LIST STYLING */
+ul {
+  padding-left: 18px;
+  margin: 0;
+}
+
+li {
+  margin-bottom: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* EXPERIENCE BLOCK */
+.exp-item {
+  margin-bottom: 12px;
+}
+
 </style>
 </head>
 
 <body>
 <div class="container">
+
+  <!-- LEFT -->
   <div class="left">
     <h1>{{name}}</h1>
     <p>{{email}}</p>
@@ -30,21 +82,37 @@ p { line-height: 1.6; }
 
     <div class="section">
       <h2>Skills</h2>
-      <p>{{skills}}</p>
+      <ul>
+        {% for skill in skills %}
+          <li>{{skill}}</li>
+        {% endfor %}
+      </ul>
     </div>
   </div>
 
+  <!-- RIGHT -->
   <div class="right">
+
     <div class="section">
       <h2>Experience</h2>
-      <p>{{experience}}</p>
+      {% for exp in experience %}
+        <div class="exp-item">
+          • {{exp}}
+        </div>
+      {% endfor %}
     </div>
 
     <div class="section">
       <h2>Education</h2>
-      <p>{{education}}</p>
+      <ul>
+        {% for edu in education %}
+          <li>{{edu}}</li>
+        {% endfor %}
+      </ul>
     </div>
+
   </div>
+
 </div>
 </body>
 </html>

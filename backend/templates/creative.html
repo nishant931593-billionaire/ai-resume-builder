@@ -1,31 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
 <style>
 body {
-  font-family: Arial;
+  font-family: 'Segoe UI', sans-serif;
   margin: 0;
+  color: #333;
 }
 
+/* HEADER */
 .header {
   background: linear-gradient(to right, #ff7e5f, #feb47b);
   color: white;
   padding: 30px;
 }
 
+.header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.header p {
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+/* CONTENT */
 .content {
   padding: 30px;
 }
 
+/* SECTION */
 .section {
-  margin-top: 20px;
+  margin-bottom: 25px;
 }
 
-h2 {
+.section h2 {
   color: #ff7e5f;
+  font-size: 16px;
+  border-left: 4px solid #ff7e5f;
+  padding-left: 10px;
+  margin-bottom: 10px;
 }
 
-p {
-  line-height: 1.6;
+/* SKILLS GRID */
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
+
+.skill {
+  background: #ffe0d6;
+  color: #333;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+/* LIST */
+ul {
+  padding-left: 18px;
+  margin: 0;
+}
+
+li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+/* EXPERIENCE BLOCK */
+.exp-item {
+  margin-bottom: 10px;
+}
+
 </style>
+</head>
+
+<body>
 
 <div class="header">
   <h1>{{name}}</h1>
@@ -33,18 +86,35 @@ p {
 </div>
 
 <div class="content">
+
   <div class="section">
     <h2>Skills</h2>
-    <p>{{skills}}</p>
+    <div class="skills">
+      {% for skill in skills %}
+        <div class="skill">{{skill}}</div>
+      {% endfor %}
+    </div>
   </div>
 
   <div class="section">
     <h2>Experience</h2>
-    <p>{{experience}}</p>
+    {% for exp in experience %}
+      <div class="exp-item">
+        • {{exp}}
+      </div>
+    {% endfor %}
   </div>
 
   <div class="section">
     <h2>Education</h2>
-    <p>{{education}}</p>
+    <ul>
+      {% for edu in education %}
+        <li>{{edu}}</li>
+      {% endfor %}
+    </ul>
   </div>
+
 </div>
+
+</body>
+</html>
