@@ -14,15 +14,12 @@ from reportlab.lib.styles import getSampleStyleSheet
 # 🔹 Load ENV
 load_dotenv()
 
-RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
-RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
-    raise Exception("Razorpay keys missing")
-
-if not OPENAI_API_KEY:
-    raise Exception("OpenAI API key missing")
+if not all([RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, OPENAI_API_KEY]):
+    raise Exception("Missing environment variables")
 
 # 🔹 App
 app = FastAPI()
@@ -52,8 +49,16 @@ class ResumeRequest(BaseModel):
     job_description: str
 
 class PaymentRequest(BaseModel):
-    
     resume_id: str
+    plan: str = "basic"   # basic / pro / premium
+
+
+# 🔹 Pricing Map
+PRICING = {
+    "basic": 4900,    # ₹49
+    "pro": 9900,      # ₹99
+    "premium": 19900  # ₹199
+}
 
 
 @app.get("/")
@@ -61,30 +66,51 @@ def home():
     return {"message": "AI Resume Builder Live 🚀"}
 
 
-# 🔹 Optimize Resume
+# 🔥 OPTIMIZE RESUME (improved prompt for better results)
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
     try:
         if not data.resume or not data.job_description:
             raise HTTPException(status_code=400, detail="Missing input")
 
+        prompt = f"""
+You are a professional ATS resume optimizer.
+
+TASK:
+- Improve the resume based on the job description
+- Add relevant keywords for ATS
+- Rewrite bullet points with strong action verbs
+- Make it concise, impactful, and results-oriented
+- Ensure it matches the job role
+
+OUTPUT FORMAT:
+- Clean resume format
+- Strong bullet points
+- No explanations, only final resume
+
+RESUME:
+{data.resume}
+
+JOB DESCRIPTION:
+{data.job_description}
+"""
+
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "You are an expert ATS resume writer."},
-                {
-                    "role": "user",
-                    "content": f"Improve this resume based on job description.\n\nResume:\n{data.resume}\n\nJob:\n{data.job_description}"
-                }
+                {"role": "user", "content": prompt}
             ]
         )
 
         result = response.choices[0].message.content
 
         resume_id = str(len(resume_store) + 1)
+
         resume_store[resume_id] = {
             "content": result,
-            "paid": False
+            "paid": False,
+            "plan": None
         }
 
         return {
@@ -95,34 +121,40 @@ def optimize_resume(data: ResumeRequest):
 
     except Exception as e:
         print("OPTIMIZE ERROR:", str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Optimization failed")
 
 
-# 🔹 Create Order
-# 🔹 Create Order
+# 🔥 CREATE ORDER (dynamic pricing)
 @app.post("/create-order")
 def create_order(data: PaymentRequest):
     try:
         if data.resume_id not in resume_store:
             raise HTTPException(status_code=404, detail="Invalid resume_id")
 
+        amount = PRICING.get(data.plan, 4900)
+
         order = razorpay_client.order.create({
-            "amount": 4900,   # ✅ ₹49 FIXED PRICE
+            "amount": amount,
             "currency": "INR",
             "payment_capture": 1
         })
 
+        # store plan
+        resume_store[data.resume_id]["plan"] = data.plan
+
         return {
             "id": order["id"],
             "amount": order["amount"],
-            "currency": order["currency"]
+            "currency": order["currency"],
+            "plan": data.plan
         }
 
     except Exception as e:
         print("RAZORPAY ERROR:", str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Payment failed")
 
-# 🔹 Verify Payment
+
+# 🔥 VERIFY PAYMENT
 @app.post("/verify-payment")
 def verify_payment(payload: dict):
     try:
@@ -143,7 +175,7 @@ def verify_payment(payload: dict):
         raise HTTPException(status_code=400, detail="Payment verification failed")
 
 
-# 🔹 Download Resume
+# 🔥 DOWNLOAD RESUME
 @app.get("/download/{resume_id}")
 def download_resume(resume_id: str):
     if resume_id not in resume_store:
@@ -168,5 +200,5 @@ def download_resume(resume_id: str):
     return FileResponse(
         file_path,
         media_type="application/pdf",
-        filename="resume.pdf"
+        filename="optimized_resume.pdf"
     )

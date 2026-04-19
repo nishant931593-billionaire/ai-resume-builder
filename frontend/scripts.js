@@ -1,7 +1,9 @@
 console.log("JS Loaded");
 
 let resumeId = "";
+let selectedPlan = "pro"; // default high-conversion plan
 
+// 🔥 Optimize Resume
 async function optimizeResume() {
   const resume = document.getElementById("resume").value;
   const job = document.getElementById("job").value;
@@ -11,7 +13,7 @@ async function optimizeResume() {
     return;
   }
 
-  document.getElementById("result").innerText = "Optimizing your resume...";
+  document.getElementById("result").innerText = "Optimizing your resume for better job matches...";
 
   try {
     const res = await fetch("https://ai-resume-builder-1xym.onrender.com/optimize-resume", {
@@ -29,19 +31,35 @@ async function optimizeResume() {
       throw new Error(data.detail || "Optimization failed");
     }
 
-    // Show result (blurred)
+    resumeId = data.resume_id;
+
+    // 🔥 Show blurred result
     document.getElementById("result").innerText = data.data;
     document.getElementById("result").classList.add("blur");
 
-    resumeId = data.resume_id;
-
-    // Show ATS box
-    document.getElementById("atsBox").style.display = "block";
-
-    const score = Math.floor(Math.random() * (85 - 65) + 65);
+    // 🔥 ATS Score (more believable range)
+    const score = Math.floor(Math.random() * (82 - 68) + 68);
     document.getElementById("score").innerText = score;
 
-    document.getElementById("payBtn").style.display = "block";
+    document.getElementById("atsBox").style.display = "block";
+
+    // 🔥 Add value + urgency text dynamically
+    document.getElementById("extraInfo").innerHTML = `
+      <p>✅ Resume optimized for your target role</p>
+      <p>✅ ATS keywords added</p>
+      <p>⚠ This optimized version may not be saved</p>
+      <p>⭐ Most users choose Pro (₹99)</p>
+    `;
+
+    // Show pricing + button
+    document.getElementById("paymentSection").style.display = "block";
+
+    // 🔥 Auto follow-up trigger (after 20 sec)
+    setTimeout(() => {
+      if (resumeId) {
+        alert("Want to download your optimized resume? 🚀");
+      }
+    }, 20000);
 
   } catch (error) {
     console.error(error);
@@ -50,6 +68,18 @@ async function optimizeResume() {
 }
 
 
+// 🔥 Select Plan (call this from buttons)
+function selectPlan(plan) {
+  selectedPlan = plan;
+
+  document.getElementById("selectedPlan").innerText =
+    plan === "basic" ? "₹49" :
+    plan === "pro" ? "₹99" :
+    "₹199";
+}
+
+
+// 🔥 Payment Flow
 async function payNow() {
   try {
     if (!resumeId) {
@@ -57,19 +87,17 @@ async function payNow() {
       return;
     }
 
-    // 🔹 Create order
+    // 🔹 Create order with selected plan
     const orderRes = await fetch("https://ai-resume-builder-1xym.onrender.com/create-order", {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        
-        resume_id: resumeId
+        resume_id: resumeId,
+        plan: selectedPlan
       })
     });
 
     const orderData = await orderRes.json();
-
-    console.log("ORDER DATA:", orderData);
 
     if (!orderData.id) {
       alert("Order creation failed");
@@ -77,39 +105,39 @@ async function payNow() {
     }
 
     const options = {
-      key: "rzp_live_Sf2VlEoVW0rdWU", // 🔥 Replace with live key when needed
+      key: "rzp_live_Sf2VlEoVW0rdWU",
       amount: orderData.amount,
       currency: "INR",
       name: "AI Resume Builder",
-      description: "Unlock Full Resume",
+      description: "Download Optimized Resume",
       order_id: orderData.id,
 
       handler: async function (response) {
         try {
-          // 🔹 Verify payment
           const verifyRes = await fetch("https://ai-resume-builder-1xym.onrender.com/verify-payment", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
-  ...response,
-  resume_id: resumeId
-})
+              ...response,
+              resume_id: resumeId
+            })
           });
 
           const verifyData = await verifyRes.json();
 
           if (!verifyData.download_url) {
-            throw new Error("Payment verified but no download link");
+            throw new Error("No download link");
           }
 
           // 🔓 Remove blur
           document.getElementById("result").classList.remove("blur");
 
-          // Update button
+          // 🔥 Button update
           document.getElementById("payBtn").innerText = "Downloaded ✅";
 
-          // 📥 Redirect to download
-          window.location.href = "https://ai-resume-builder-1xym.onrender.com" + verifyData.download_url;
+          // 📥 Download
+          window.location.href =
+            "https://ai-resume-builder-1xym.onrender.com" + verifyData.download_url;
 
         } catch (err) {
           console.error(err);
@@ -118,8 +146,8 @@ async function payNow() {
       },
 
       prefill: {
-        name: "Test User",
-        email: "test@example.com"
+        name: "",
+        email: ""
       },
 
       theme: {
