@@ -82,24 +82,37 @@ def home():
 def optimize_resume(data: ResumeRequest):
     try:
         prompt = f"""
-You are an expert resume writer.
+You are an expert ATS resume writer.
 
-Convert the resume into structured JSON.
+Your task is to:
+- Rewrite and enhance the resume using the job description
+- Make it detailed, impactful, and recruiter-ready
+- Expand bullet points with measurable achievements
+- Add missing but relevant skills if clearly implied
+- Use strong action verbs
 
-RULES:
-- Extract real information only
-- Keep it concise
-- Use bullet points for experience
+IMPORTANT RULES:
+- DO NOT keep it short
+- Each experience should have 2-5 bullet points
+- Add numbers, impact, and results wherever possible
+- Keep professional tone
+- Make it look like a high-quality paid resume
 
-RETURN ONLY VALID JSON:
+RETURN ONLY VALID JSON (no explanation):
 
 {{
   "name": "",
   "email": "",
   "phone": "",
-  "skills": [],
-  "experience": [],
-  "education": []
+  "skills": ["", "", "", "", ""],
+  "experience": [
+    "",
+    "",
+    ""
+  ],
+  "education": [
+    ""
+  ]
 }}
 
 RESUME:
@@ -108,6 +121,7 @@ RESUME:
 JOB DESCRIPTION:
 {data.job_description}
 """
+ 
 
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
