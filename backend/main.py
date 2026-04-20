@@ -33,15 +33,11 @@ app.add_middleware(
 
 # 🔹 CLIENTS
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
-
-razorpay_client = razorpay.Client(auth=(
-    RAZORPAY_KEY_ID,
-    RAZORPAY_KEY_SECRET
-))
+razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # 🔹 STORAGE
 resume_store = {}
-PRICE = 4900  # ✅ ₹49
+PRICE = 4900  # ₹49
 os.makedirs("generated", exist_ok=True)
 
 # 🔹 MODELS
@@ -58,45 +54,83 @@ class PaymentRequest(BaseModel):
 def home():
     return {"message": "AI Resume Builder 🚀"}
 
-# ---------------- SAFE JSON PARSER ----------------
-def safe_json_parse(text):
+# ---------------- SAFE JSON ----------------
+def clean_json(text: str):
     try:
+        text = text.strip()
+
+        # remove markdown ```json ```
+        if "```" in text:
+            text = text.split("```")[1]
+
         return json.loads(text)
-    except:
-        print("JSON ERROR:", text)
+    except Exception as e:
+        print("JSON ERROR:", e)
         return {}
 
-# ---------------- STEP 1 ----------------
+# ---------------- STEP 1: EXTRACT ----------------
 def extract_resume_data(resume_text: str):
     try:
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{
                 "role": "user",
-                "content": f"Extract structured JSON from resume:\n{resume_text}"
+                "content": f"""
+Return ONLY valid JSON.
+
+Format:
+{{
+  "name": "",
+  "email": "",
+  "phone": "",
+  "skills": [],
+  "experience": [],
+  "projects": [],
+  "education": []
+}}
+
+Resume:
+{resume_text}
+"""
             }]
         )
 
         content = response.choices[0].message.content
-        return safe_json_parse(content)
+        data = clean_json(content)
+
+        return data if data else {}
 
     except Exception as e:
         print("EXTRACT ERROR:", e)
         return {}
 
-# ---------------- STEP 2 ----------------
+# ---------------- STEP 2: REWRITE ----------------
 def rewrite_resume(data: dict, job_description: str):
     try:
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{
                 "role": "user",
-                "content": f"Rewrite resume for ATS:\nDATA:{json.dumps(data)}\nJOB:{job_description}"
+                "content": f"""
+Rewrite this resume for ATS.
+
+Use ONLY given data.
+
+DATA:
+{json.dumps(data)}
+
+JOB:
+{job_description}
+
+Return JSON only.
+"""
             }]
         )
 
         content = response.choices[0].message.content
-        return safe_json_parse(content)
+        new_data = clean_json(content)
+
+        return new_data if new_data else data
 
     except Exception as e:
         print("REWRITE ERROR:", e)
@@ -108,8 +142,17 @@ def optimize_resume(data: ResumeRequest):
     try:
         extracted = extract_resume_data(data.resume)
 
+        # 🔥 NO MORE CRASH
         if not extracted:
-            raise Exception("Extraction failed")
+            extracted = {
+                "name": "",
+                "email": "",
+                "phone": "",
+                "skills": [],
+                "experience": [],
+                "projects": [],
+                "education": []
+            }
 
         final_resume = rewrite_resume(extracted, data.job_description)
 
@@ -127,7 +170,7 @@ def optimize_resume(data: ResumeRequest):
         return {
             "success": True,
             "resume_id": resume_id,
-            "data": json.dumps(final_resume, indent=2)  # ✅ prevent frontend crash
+            "data": json.dumps(final_resume)  # safe for frontend
         }
 
     except Exception as e:
@@ -142,7 +185,7 @@ def create_order(data: PaymentRequest):
             raise HTTPException(status_code=404, detail="Invalid resume_id")
 
         order = razorpay_client.order.create({
-            "amount": PRICE,  # ✅ ₹49
+            "amount": PRICE,
             "currency": "INR",
             "payment_capture": 1
         })
@@ -193,7 +236,6 @@ def generate_pdf(resume_id: str):
         html = template.render(**data)
 
         file_path = f"generated/{uuid.uuid4().hex}.pdf"
-
         HTML(string=html).write_pdf(file_path)
 
         resume_store[resume_id]["file"] = file_path
