@@ -77,35 +77,74 @@ def safe_json(text: str):
 def optimize_resume(data: ResumeRequest):
     try:
         prompt = f"""
-You are a professional ATS resume writer.
+You are a professional ATS resume optimizer.
 
-GOAL:
-Create a FULL, DETAILED, PROFESSIONAL resume.
+Your task is to IMPROVE and REWRITE the resume to be ATS-friendly and tailored to the job description — WITHOUT adding or inventing ANY new information.
 
-RULES:
-- Do NOT invent fake companies or projects
-- Expand existing information
-- Improve wording
+CORE RULE:
+- You MUST ONLY use information explicitly present in the resume.
+- DO NOT fabricate, assume, or create any new experience, projects, achievements, or metrics.
+- If something is not mentioned, DO NOT add it.
 
-FORMAT (JSON ONLY):
+ALLOWED ACTIONS:
+- Rephrase and improve wording
+- Make bullet points more professional and impactful
+- Add relevant ATS keywords from the job description (ONLY if they match existing experience/skills)
+- Improve clarity, grammar, and structure
+- Expand descriptions ONLY using existing facts
+
+STRICT RESTRICTIONS:
+
+1. NO FAKE CONTENT:
+   - Do NOT create new companies, roles, projects, or achievements
+   - Do NOT add numbers, metrics, or results unless already mentioned
+   - Do NOT assume responsibilities
+
+2. EXPERIENCE:
+   - Keep all roles strictly based on input
+   - You may rewrite bullet points for clarity and impact
+   - Do NOT exceed what is logically supported by the original resume
+
+3. PROJECTS:
+   - Only include projects that are explicitly mentioned
+   - Do NOT create new projects under any condition
+
+4. SKILLS:
+   - Extract and reorganize existing skills
+   - You may reorder and group them
+   - Do NOT add new skills
+
+5. EDUCATION:
+   - Keep factual and unchanged except formatting
+
+6. KEYWORD OPTIMIZATION:
+   - Integrate relevant keywords from the job description ONLY if they align with existing content
+   - Do NOT insert keywords that are not supported by the resume
+
+7. IF DATA IS MISSING:
+   - Leave section empty OR keep minimal
+   - DO NOT fill with assumptions
+
+OUTPUT FORMAT:
+Return ONLY valid JSON:
 
 {{
   "name": "",
   "email": "",
   "phone": "",
-  "summary": "",
   "skills": [],
   "experience": [],
   "projects": [],
   "education": []
 }}
 
-RESUME:
+INPUT RESUME:
 {data.resume}
 
 JOB DESCRIPTION:
 {data.job_description}
 """
+   
 
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
