@@ -2,13 +2,22 @@ console.log("JS Loaded");
 
 let resumeId = "";
 
-// 🔥 Render structured preview
+// 🔥 Safe element getter
+function getEl(id) {
+  const el = document.getElementById(id);
+  if (!el) console.error(`❌ Missing element: ${id}`);
+  return el;
+}
+
+// 🔥 Render structured preview (fixed)
 function renderResumePreview(data) {
   let html = "";
 
   if (data.name) html += `\n👤 ${data.name}\n`;
-  if (data.email || data.phone)
+
+  if (data.email || data.phone) {
     html += `${data.email || ""} ${data.phone ? "| " + data.phone : ""}\n`;
+  }
 
   if (data.skills?.length) {
     html += `\n🔹 Skills:\n`;
@@ -20,16 +29,16 @@ function renderResumePreview(data) {
   if (data.experience?.length) {
     html += `\n🔹 Experience:\n`;
     data.experience.forEach(e => {
-      html += `• ${e}\n`;
+      html += `• ${e.role || ""} ${e.company ? "at " + e.company : ""}\n`;
     });
   }
 
   if (data.projects?.length) {
-  html += `\n🔹 Projects:\n`;
-  data.projects.forEach(p => {
-    html += `• ${p}\n`;
-  });
-}
+    html += `\n🔹 Projects:\n`;
+    data.projects.forEach(p => {
+      html += `• ${p.name || ""}\n`;
+    });
+  }
 
   if (data.education?.length) {
     html += `\n🔹 Education:\n`;
@@ -44,16 +53,16 @@ function renderResumePreview(data) {
 
 // 🔥 Optimize Resume
 async function optimizeResume() {
-  const resume = document.getElementById("resume").value.trim();
-  const job = document.getElementById("job").value.trim();
-  const template = document.getElementById("template").value;
+  const resume = getEl("resume").value.trim();
+  const job = getEl("job").value.trim();
+  const template = getEl("template").value;
 
   if (!resume || !job) {
     alert("Please fill both fields");
     return;
   }
 
-  const resultBox = document.getElementById("result");
+  const resultBox = getEl("result");
   const btn = document.querySelector(".main-btn");
 
   btn.disabled = true;
@@ -74,6 +83,8 @@ async function optimizeResume() {
       })
     });
 
+    if (!res.ok) throw new Error("Server error");
+
     const data = await res.json();
 
     if (!data.success) {
@@ -82,19 +93,20 @@ async function optimizeResume() {
 
     resumeId = data.resume_id;
 
-    // 🔥 Render structured preview
-    const formatted = renderResumePreview(data.data);
+    const formatted = renderResumePreview(
+      typeof data.data === "string" ? JSON.parse(data.data) : data.data
+    );
 
     resultBox.innerText = formatted;
     resultBox.classList.add("blur");
 
     // 📊 ATS Score
     const score = Math.floor(Math.random() * 15 + 70);
-    document.getElementById("score").innerText = score;
-    document.getElementById("atsBox").classList.remove("hidden");
+    getEl("score").innerText = score;
+    getEl("atsBox").style.display = "block";
 
     // 🔑 Keywords
-    const keywordsList = document.getElementById("keywords");
+    const keywordsList = getEl("keywords");
     keywordsList.innerHTML = "";
 
     (data.data.skills || []).slice(0, 5).forEach(k => {
@@ -104,24 +116,24 @@ async function optimizeResume() {
     });
 
     // 🔥 Info
-    document.getElementById("extraInfo").innerHTML = `
+    getEl("extraInfo").innerHTML = `
       <p>✅ Structured resume created</p>
       <p>✅ ATS optimized</p>
       <p>⚠ Full resume is locked</p>
       <p>🔥 Unlock for ₹49</p>
     `;
-    document.getElementById("extraInfo").classList.remove("hidden");
+    getEl("extraInfo").style.display = "block";
 
     // 💰 Show payment
-    document.getElementById("paymentSection").classList.remove("hidden");
+    getEl("paymentSection").style.display = "block";
 
-    document.getElementById("paymentSection").scrollIntoView({
+    getEl("paymentSection").scrollIntoView({
       behavior: "smooth"
     });
 
   } catch (err) {
     console.error(err);
-    resultBox.innerText = "Something went wrong.";
+    resultBox.innerText = "❌ Something went wrong. Try again.";
   } finally {
     btn.disabled = false;
     btn.innerText = "🚀 Optimize My Resume";
@@ -136,7 +148,7 @@ async function payNow() {
     return;
   }
 
-  const payBtn = document.getElementById("payBtn");
+  const payBtn = getEl("payBtn");
 
   try {
     payBtn.disabled = true;
@@ -149,6 +161,8 @@ async function payNow() {
       },
       body: JSON.stringify({ resume_id: resumeId })
     });
+
+    if (!orderRes.ok) throw new Error("Order failed");
 
     const orderData = await orderRes.json();
 
@@ -175,10 +189,12 @@ async function payNow() {
             })
           });
 
+          if (!verifyRes.ok) throw new Error("Verification failed");
+
           const verifyData = await verifyRes.json();
 
           // 🔓 Unlock preview
-          document.getElementById("result").classList.remove("blur");
+          getEl("result").classList.remove("blur");
 
           payBtn.innerText = "Downloaded ✅";
 
@@ -186,6 +202,7 @@ async function payNow() {
             "https://ai-resume-builder-1xym.onrender.com" + verifyData.download_url;
 
         } catch (err) {
+          console.error(err);
           alert("Payment done but download failed.");
           payBtn.disabled = false;
           payBtn.innerText = "Try Again";

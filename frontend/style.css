@@ -1,3 +1,4 @@
+/* 🔄 RESET */
 * {
   margin: 0;
   padding: 0;
@@ -13,7 +14,7 @@ body {
 
 /* 📦 CONTAINER */
 .container {
-  max-width: 780px;
+  max-width: 800px;
   margin: auto;
   padding: 30px 20px;
 }
@@ -25,7 +26,7 @@ body {
 }
 
 h1 {
-  font-size: 30px;
+  font-size: 32px;
   color: #1a202c;
   margin-bottom: 10px;
 }
@@ -40,13 +41,13 @@ h1 {
   background: #fff;
   padding: 22px;
   margin-top: 20px;
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  transition: 0.2s ease;
+  border-radius: 16px;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+  transition: 0.25s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
 /* ✏️ INPUTS */
@@ -65,7 +66,7 @@ textarea {
 
 textarea:focus {
   border-color: #5a67d8;
-  box-shadow: 0 0 8px rgba(90,103,216,0.35);
+  box-shadow: 0 0 10px rgba(90,103,216,0.35);
   outline: none;
 }
 
@@ -90,22 +91,22 @@ select {
   color: #444;
 }
 
-/* 🚀 BUTTON */
+/* 🚀 MAIN BUTTON */
 .main-btn {
   width: 100%;
   padding: 15px;
   border: none;
-  border-radius: 12px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #5a67d8, #667eea);
   color: white;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
+  transition: 0.25s;
 }
 
 .main-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   opacity: 0.95;
 }
 
@@ -135,17 +136,18 @@ select {
   padding: 15px;
 }
 
-/* 💰 PAYMENT */
+/* 💰 PAYMENT (IMPORTANT FOR CONVERSION) */
 #paymentSection {
-  background: #f9fafc;
-  border-radius: 14px;
-  padding: 22px;
+  background: #fff;
+  border: 2px solid #5a67d8;
+  border-radius: 16px;
+  padding: 25px;
   text-align: center;
 }
 
 /* 💸 PRICE */
 .price {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: bold;
   margin: 12px 0;
   color: #1a202c;
@@ -158,23 +160,24 @@ select {
   font-size: 14px;
 }
 
-/* 💳 PAY BUTTON */
+/* 💳 PAY BUTTON (MAKE THIS DOMINANT) */
 .pay-btn {
   width: 100%;
-  margin-top: 15px;
-  padding: 15px;
+  margin-top: 18px;
+  padding: 16px;
   border: none;
-  border-radius: 12px;
-  background: #111;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #111, #333);
   color: #fff;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.2s;
+  transition: 0.25s;
 }
 
 .pay-btn:hover {
-  background: #333;
+  transform: scale(1.02);
+  background: linear-gradient(135deg, #000, #222);
 }
 
 /* 🔐 TRUST */
@@ -239,11 +242,17 @@ li {
   color: #555;
 }
 
-/* 🔧 UTILITY */
-.hidden {
-  display: none;
-}
+/* 📱 MOBILE OPTIMIZATION */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 24px;
+  }
 
-.center {
-  text-align: center;
+  .compare {
+    flex-direction: column;
+  }
+
+  .container {
+    padding: 20px 15px;
+  }
 }

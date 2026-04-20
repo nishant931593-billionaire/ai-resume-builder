@@ -3,7 +3,9 @@
 <head>
   <title>AI Resume Builder</title>
 
+  <!-- Razorpay -->
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:,">
 </head>
@@ -16,7 +18,7 @@
   <div class="hero">
     <h1>Get More Interviews with a Better Resume 🚀</h1>
     <p class="subtitle">
-      Paste your resume + job description → Get a premium, ATS-optimized resume in seconds
+      Paste your resume + job description → Get a premium, ATS-optimized resume instantly
     </p>
   </div>
 
@@ -29,7 +31,7 @@
     <label>Job Description</label>
     <textarea id="job" placeholder="Paste job description here"></textarea>
 
-    <!-- 🎨 TEMPLATE SELECT -->
+    <!-- 🎨 TEMPLATE -->
     <label>Select Template</label>
     <select id="template" onchange="previewTemplate()">
       <option value="modern">Modern (Recommended)</option>
@@ -49,9 +51,8 @@
   </div>
 
   <!-- 📊 ATS -->
-  <div id="atsBox" class="card hidden">
+  <div id="atsBox" class="card" style="display:none;">
     <h3>ATS Score: <span id="score">0</span>/100</h3>
-
     <p>Missing Keywords:</p>
     <ul id="keywords"></ul>
   </div>
@@ -63,10 +64,10 @@
   </div>
 
   <!-- 🔥 EXTRA INFO -->
-  <div id="extraInfo" class="card hidden"></div>
+  <div id="extraInfo" class="card" style="display:none;"></div>
 
   <!-- 💰 PAYMENT -->
-  <div id="paymentSection" class="card hidden center">
+  <div id="paymentSection" class="card" style="display:none; text-align:center;">
 
     <h3>Unlock Your Premium Resume</h3>
 
@@ -133,7 +134,7 @@
 
 <script src="scripts.js"></script>
 
-<!-- 🔥 SMALL JS FOR TEMPLATE PREVIEW -->
+<!-- 🔥 TEMPLATE PREVIEW -->
 <script>
 function previewTemplate() {
   const template = document.getElementById("template").value;

@@ -3,20 +3,12 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-import os
-import time
-import hmac
-import hashlib
-import uuid
-import json
-
+import os, time, hmac, hashlib, uuid, json
 from dotenv import load_dotenv
 from openai import OpenAI
 import razorpay
-
 from jinja2 import Template
 from weasyprint import HTML
-
 
 # 🔹 ENV
 load_dotenv()
@@ -28,8 +20,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not all([RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, OPENAI_API_KEY]):
     raise Exception("Missing environment variables")
 
-
-# 🔹 App
+# 🔹 APP
 app = FastAPI()
 
 app.add_middleware(
@@ -40,8 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# 🔹 Clients
+# 🔹 CLIENTS
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 razorpay_client = razorpay.Client(auth=(
@@ -49,128 +39,78 @@ razorpay_client = razorpay.Client(auth=(
     RAZORPAY_KEY_SECRET
 ))
 
-
-# 🔹 Storage
+# 🔹 STORAGE
 resume_store = {}
-
-PRICE = 100
+PRICE = 4900  # ✅ ₹49
 os.makedirs("generated", exist_ok=True)
 
-
-# 🔹 Models
+# 🔹 MODELS
 class ResumeRequest(BaseModel):
     resume: str
     job_description: str
     template: str = "modern"
 
-
 class PaymentRequest(BaseModel):
     resume_id: str
-
 
 # ---------------- HOME ----------------
 @app.get("/")
 def home():
-    return {"message": "AI Resume Builder (Safe Mode) 🚀"}
+    return {"message": "AI Resume Builder 🚀"}
 
+# ---------------- SAFE JSON PARSER ----------------
+def safe_json_parse(text):
+    try:
+        return json.loads(text)
+    except:
+        print("JSON ERROR:", text)
+        return {}
 
-# ---------------- STEP 1: EXTRACTION ----------------
+# ---------------- STEP 1 ----------------
 def extract_resume_data(resume_text: str):
-    prompt = f"""
-Extract ONLY factual data from this resume.
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{
+                "role": "user",
+                "content": f"Extract structured JSON from resume:\n{resume_text}"
+            }]
+        )
 
-STRICT:
-- Do NOT infer or add anything
-- Do NOT rewrite
-- Only extract
+        content = response.choices[0].message.content
+        return safe_json_parse(content)
 
-OUTPUT JSON:
+    except Exception as e:
+        print("EXTRACT ERROR:", e)
+        return {}
 
-{{
-  "name": "",
-  "email": "",
-  "phone": "",
-  "skills": [],
-  "experience": [
-    {{
-      "role": "",
-      "company": "",
-      "duration": "",
-      "points": []
-    }}
-  ],
-  "projects": [
-    {{
-      "name": "",
-      "description": "",
-      "points": []
-    }}
-  ],
-  "education": []
-}}
+# ---------------- STEP 2 ----------------
+def rewrite_resume(data: dict, job_description: str):
+    try:
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{
+                "role": "user",
+                "content": f"Rewrite resume for ATS:\nDATA:{json.dumps(data)}\nJOB:{job_description}"
+            }]
+        )
 
-RESUME:
-{resume_text}
-"""
+        content = response.choices[0].message.content
+        return safe_json_parse(content)
 
-    response = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
+    except Exception as e:
+        print("REWRITE ERROR:", e)
+        return data
 
-    return json.loads(response.choices[0].message.content)
-
-
-# ---------------- STEP 2: SAFE REWRITE ----------------
-def rewrite_resume(structured_data: dict, job_description: str):
-    prompt = f"""
-Rewrite this resume to be ATS optimized.
-
-STRICT RULES:
-- Use ONLY given data
-- Do NOT add new info
-- Do NOT create fake experience/projects
-- Do NOT add metrics unless present
-
-ALLOWED:
-- Improve wording
-- Add relevant ATS keywords (ONLY if matching existing data)
-
-RETURN JSON:
-
-{{
-  "name": "",
-  "email": "",
-  "phone": "",
-  "skills": [],
-  "experience": [],
-  "projects": [],
-  "education": []
-}}
-
-DATA:
-{json.dumps(structured_data)}
-
-JOB DESCRIPTION:
-{job_description}
-"""
-
-    response = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    return json.loads(response.choices[0].message.content)
-
-
-# ---------------- OPTIMIZE RESUME ----------------
+# ---------------- OPTIMIZE ----------------
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
     try:
-        # STEP 1: Extract truth
         extracted = extract_resume_data(data.resume)
 
-        # STEP 2: Rewrite safely
+        if not extracted:
+            raise Exception("Extraction failed")
+
         final_resume = rewrite_resume(extracted, data.job_description)
 
         resume_id = str(len(resume_store) + 1)
@@ -187,86 +127,102 @@ def optimize_resume(data: ResumeRequest):
         return {
             "success": True,
             "resume_id": resume_id,
-            "data": final_resume
+            "data": json.dumps(final_resume, indent=2)  # ✅ prevent frontend crash
         }
 
     except Exception as e:
-        print("ERROR:", str(e))
+        print("OPTIMIZE ERROR:", e)
         raise HTTPException(status_code=500, detail="Processing failed")
-
 
 # ---------------- CREATE ORDER ----------------
 @app.post("/create-order")
 def create_order(data: PaymentRequest):
-    if data.resume_id not in resume_store:
-        raise HTTPException(status_code=404, detail="Invalid resume_id")
+    try:
+        if data.resume_id not in resume_store:
+            raise HTTPException(status_code=404, detail="Invalid resume_id")
 
-    order = razorpay_client.order.create({
-        "amount": PRICE,
-        "currency": "INR",
-        "payment_capture": 1
-    })
+        order = razorpay_client.order.create({
+            "amount": PRICE,  # ✅ ₹49
+            "currency": "INR",
+            "payment_capture": 1
+        })
 
-    resume_store[data.resume_id]["order_id"] = order["id"]
+        resume_store[data.resume_id]["order_id"] = order["id"]
 
-    return order
+        return order
 
+    except Exception as e:
+        print("ORDER ERROR:", e)
+        raise HTTPException(status_code=500, detail="Order failed")
 
-# ---------------- VERIFY PAYMENT ----------------
+# ---------------- VERIFY ----------------
 @app.post("/verify-payment")
 def verify_payment(payload: dict):
-    resume_id = payload.get("resume_id")
+    try:
+        resume_id = payload.get("resume_id")
 
-    if resume_id not in resume_store:
-        raise HTTPException(status_code=400, detail="Invalid resume")
+        if resume_id not in resume_store:
+            raise HTTPException(status_code=400, detail="Invalid resume")
 
-    generated_signature = hmac.new(
-        RAZORPAY_KEY_SECRET.encode(),
-        f"{payload['razorpay_order_id']}|{payload['razorpay_payment_id']}".encode(),
-        hashlib.sha256
-    ).hexdigest()
+        generated_signature = hmac.new(
+            RAZORPAY_KEY_SECRET.encode(),
+            f"{payload['razorpay_order_id']}|{payload['razorpay_payment_id']}".encode(),
+            hashlib.sha256
+        ).hexdigest()
 
-    if generated_signature != payload.get("razorpay_signature"):
-        raise HTTPException(status_code=400, detail="Invalid signature")
+        if generated_signature != payload.get("razorpay_signature"):
+            raise HTTPException(status_code=400, detail="Invalid signature")
 
-    resume_store[resume_id]["paid"] = True
+        resume_store[resume_id]["paid"] = True
 
-    return {"download_url": f"/download/{resume_id}"}
+        return {"download_url": f"/download/{resume_id}"}
 
+    except Exception as e:
+        print("VERIFY ERROR:", e)
+        raise HTTPException(status_code=500, detail="Verification failed")
 
 # ---------------- PDF ----------------
 def generate_pdf(resume_id: str):
-    data = resume_store[resume_id]["data"]
-    template_name = resume_store[resume_id]["template"]
+    try:
+        data = resume_store[resume_id]["data"]
+        template_name = resume_store[resume_id]["template"]
 
-    with open(f"templates/{template_name}.html", "r", encoding="utf-8") as f:
-        template = Template(f.read())
+        with open(f"templates/{template_name}.html", "r", encoding="utf-8") as f:
+            template = Template(f.read())
 
-    html = template.render(**data)
+        html = template.render(**data)
 
-    file_path = f"generated/{uuid.uuid4().hex}.pdf"
+        file_path = f"generated/{uuid.uuid4().hex}.pdf"
 
-    HTML(string=html).write_pdf(file_path)
+        HTML(string=html).write_pdf(file_path)
 
-    resume_store[resume_id]["file"] = file_path
+        resume_store[resume_id]["file"] = file_path
 
-    return file_path
+        return file_path
 
+    except Exception as e:
+        print("PDF ERROR:", e)
+        raise Exception("PDF generation failed")
 
 # ---------------- DOWNLOAD ----------------
 @app.get("/download/{resume_id}")
 def download_resume(resume_id: str):
-    if resume_id not in resume_store:
-        raise HTTPException(status_code=404, detail="Not found")
+    try:
+        if resume_id not in resume_store:
+            raise HTTPException(status_code=404, detail="Not found")
 
-    if not resume_store[resume_id]["paid"]:
-        raise HTTPException(status_code=403, detail="Payment required")
+        if not resume_store[resume_id]["paid"]:
+            raise HTTPException(status_code=403, detail="Payment required")
 
-    if not resume_store[resume_id]["file"]:
-        generate_pdf(resume_id)
+        if not resume_store[resume_id]["file"]:
+            generate_pdf(resume_id)
 
-    return FileResponse(
-        resume_store[resume_id]["file"],
-        media_type="application/pdf",
-        filename="resume.pdf"
-    )
+        return FileResponse(
+            resume_store[resume_id]["file"],
+            media_type="application/pdf",
+            filename="resume.pdf"
+        )
+
+    except Exception as e:
+        print("DOWNLOAD ERROR:", e)
+        raise HTTPException(status_code=500, detail="Download failed")
