@@ -53,10 +53,7 @@ razorpay_client = razorpay.Client(auth=(
 # 🔹 Storage
 resume_store = {}
 
-# 🔹 Price ₹99
 PRICE = 100
-
-# 🔹 Ensure folder
 os.makedirs("generated", exist_ok=True)
 
 
@@ -74,81 +71,112 @@ class PaymentRequest(BaseModel):
 # ---------------- HOME ----------------
 @app.get("/")
 def home():
-    return {"message": "AI Resume Builder Live 🚀"}
+    return {"message": "AI Resume Builder (Safe Mode) 🚀"}
+
+
+# ---------------- STEP 1: EXTRACTION ----------------
+def extract_resume_data(resume_text: str):
+    prompt = f"""
+Extract ONLY factual data from this resume.
+
+STRICT:
+- Do NOT infer or add anything
+- Do NOT rewrite
+- Only extract
+
+OUTPUT JSON:
+
+{{
+  "name": "",
+  "email": "",
+  "phone": "",
+  "skills": [],
+  "experience": [
+    {{
+      "role": "",
+      "company": "",
+      "duration": "",
+      "points": []
+    }}
+  ],
+  "projects": [
+    {{
+      "name": "",
+      "description": "",
+      "points": []
+    }}
+  ],
+  "education": []
+}}
+
+RESUME:
+{resume_text}
+"""
+
+    response = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return json.loads(response.choices[0].message.content)
+
+
+# ---------------- STEP 2: SAFE REWRITE ----------------
+def rewrite_resume(structured_data: dict, job_description: str):
+    prompt = f"""
+Rewrite this resume to be ATS optimized.
+
+STRICT RULES:
+- Use ONLY given data
+- Do NOT add new info
+- Do NOT create fake experience/projects
+- Do NOT add metrics unless present
+
+ALLOWED:
+- Improve wording
+- Add relevant ATS keywords (ONLY if matching existing data)
+
+RETURN JSON:
+
+{{
+  "name": "",
+  "email": "",
+  "phone": "",
+  "skills": [],
+  "experience": [],
+  "projects": [],
+  "education": []
+}}
+
+DATA:
+{json.dumps(structured_data)}
+
+JOB DESCRIPTION:
+{job_description}
+"""
+
+    response = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return json.loads(response.choices[0].message.content)
 
 
 # ---------------- OPTIMIZE RESUME ----------------
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
     try:
-        prompt = f"""
-You are a world-class ATS resume writer.
+        # STEP 1: Extract truth
+        extracted = extract_resume_data(data.resume)
 
-Your job is to transform the resume into a HIGH-QUALITY, DETAILED, PROFESSIONAL resume.
-
-GOALS:
-- Make the resume look like a premium ₹500+ resume
-- Expand all sections with strong, detailed content
-- Improve weak points with better phrasing and impact
-
-STRICT RULES:
-
-1. DO NOT keep it short
-2. Skills: minimum 8-12 items
-3. Experience:
-   - At least 5-8 bullet points
-   - Each bullet must be detailed (minimum 15-25 words)
-   - Use action verbs + impact + results
-4. Projects:
-   - Add 2-4 strong project descriptions if missing
-   - Each with 2-4 bullet points
-5. Education: keep clean but professional
-6. Add missing sections if needed (Projects, Achievements, Certifications)
-7. Use ATS-friendly keywords from job description
-8. Make beginner experience look strong (but realistic)
-
-FORMAT:
-
-Return ONLY valid JSON:
-
-{{
-  "name": "",
-  "email": "",
-  "phone": "",
-  "skills": ["", "", "", "", "", "", "", ""],
-  "experience": ["", "", "", "", "", "", ""],
-  "projects": ["", "", ""],
-  "education": ["", ""]
-}}
-
-RESUME:
-{data.resume}
-
-JOB DESCRIPTION:
-{data.job_description}
-"""
-       
- 
-
-        response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Expert resume parser"},
-                {"role": "user", "content": prompt}
-            ]
-        )
-
-        raw_output = response.choices[0].message.content
-
-        try:
-            parsed = json.loads(raw_output)
-        except:
-            raise HTTPException(status_code=500, detail="AI parsing failed")
+        # STEP 2: Rewrite safely
+        final_resume = rewrite_resume(extracted, data.job_description)
 
         resume_id = str(len(resume_store) + 1)
 
         resume_store[resume_id] = {
-            "data": parsed,
+            "data": final_resume,
             "paid": False,
             "order_id": None,
             "template": data.template,
@@ -159,12 +187,12 @@ JOB DESCRIPTION:
         return {
             "success": True,
             "resume_id": resume_id,
-            "data": parsed   # 👈 send structured data
+            "data": final_resume
         }
 
     except Exception as e:
-        print("OPTIMIZE ERROR:", str(e))
-        raise HTTPException(status_code=500, detail="Optimization failed")
+        print("ERROR:", str(e))
+        raise HTTPException(status_code=500, detail="Processing failed")
 
 
 # ---------------- CREATE ORDER ----------------
@@ -192,8 +220,6 @@ def verify_payment(payload: dict):
     if resume_id not in resume_store:
         raise HTTPException(status_code=400, detail="Invalid resume")
 
-    stored_order = resume_store[resume_id]["order_id"]
-
     generated_signature = hmac.new(
         RAZORPAY_KEY_SECRET.encode(),
         f"{payload['razorpay_order_id']}|{payload['razorpay_payment_id']}".encode(),
@@ -205,12 +231,10 @@ def verify_payment(payload: dict):
 
     resume_store[resume_id]["paid"] = True
 
-    return {
-        "download_url": f"/download/{resume_id}"
-    }
+    return {"download_url": f"/download/{resume_id}"}
 
 
-# ---------------- PDF GENERATION ----------------
+# ---------------- PDF ----------------
 def generate_pdf(resume_id: str):
     data = resume_store[resume_id]["data"]
     template_name = resume_store[resume_id]["template"]
@@ -218,18 +242,9 @@ def generate_pdf(resume_id: str):
     with open(f"templates/{template_name}.html", "r", encoding="utf-8") as f:
         template = Template(f.read())
 
-    html = template.render(
-        name=data.get("name", ""),
-        email=data.get("email", ""),
-        phone=data.get("phone", ""),
-        skills=data.get("skills", []),
-        experience=data.get("experience", []),
-        education=data.get("education", []),
-        projects=data.get("projects", [])
-    )
+    html = template.render(**data)
 
-    file_name = f"{uuid.uuid4().hex}.pdf"
-    file_path = f"generated/{file_name}"
+    file_path = f"generated/{uuid.uuid4().hex}.pdf"
 
     HTML(string=html).write_pdf(file_path)
 
