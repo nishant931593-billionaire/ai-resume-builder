@@ -49,11 +49,6 @@ class ResumeRequest(BaseModel):
 class PaymentRequest(BaseModel):
     resume_id: str
 
-# ---------------- HOME ----------------
-@app.get("/")
-def home():
-    return {"message": "AI Resume Builder 🚀"}
-
 # ---------------- SAFE JSON ----------------
 def clean_json(text: str):
     try:
@@ -61,38 +56,57 @@ def clean_json(text: str):
 
         # remove markdown ```json ```
         if "```" in text:
-            text = text.split("```")[1]
+            parts = text.split("```")
+            text = parts[1] if len(parts) > 1 else text
 
         return json.loads(text)
     except Exception as e:
         print("JSON ERROR:", e)
         return {}
 
-# ---------------- STEP 1: EXTRACT ----------------
+# ---------------- STEP 1: EXTRACTION ----------------
 def extract_resume_data(resume_text: str):
     try:
-        response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{
-                "role": "user",
-                "content": f"""
-Return ONLY valid JSON.
+        prompt = f"""
+Extract ONLY factual data from this resume.
 
-Format:
+STRICT:
+- Do NOT infer or add anything
+- Do NOT rewrite
+- Only extract
+
+OUTPUT JSON:
+
 {{
   "name": "",
   "email": "",
   "phone": "",
   "skills": [],
-  "experience": [],
-  "projects": [],
+  "experience": [
+    {{
+      "role": "",
+      "company": "",
+      "duration": "",
+      "points": []
+    }}
+  ],
+  "projects": [
+    {{
+      "name": "",
+      "description": "",
+      "points": []
+    }}
+  ],
   "education": []
 }}
 
-Resume:
+RESUME:
 {resume_text}
 """
-            }]
+
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}]
         )
 
         content = response.choices[0].message.content
@@ -104,45 +118,62 @@ Resume:
         print("EXTRACT ERROR:", e)
         return {}
 
-# ---------------- STEP 2: REWRITE ----------------
-def rewrite_resume(data: dict, job_description: str):
+# ---------------- STEP 2: SAFE REWRITE ----------------
+def rewrite_resume(structured_data: dict, job_description: str):
     try:
-        response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{
-                "role": "user",
-                "content": f"""
-Rewrite this resume for ATS.
+        prompt = f"""
+Rewrite this resume to be ATS optimized.
 
-Use ONLY given data.
+STRICT RULES:
+- Use ONLY given data
+- Do NOT add new info
+- Do NOT create fake experience/projects
+- Do NOT add metrics unless present
+
+ALLOWED:
+- Improve wording
+- Add relevant ATS keywords (ONLY if matching existing data)
+
+RETURN JSON:
+
+{{
+  "name": "",
+  "email": "",
+  "phone": "",
+  "skills": [],
+  "experience": [],
+  "projects": [],
+  "education": []
+}}
 
 DATA:
-{json.dumps(data)}
+{json.dumps(structured_data)}
 
-JOB:
+JOB DESCRIPTION:
 {job_description}
-
-Return JSON only.
 """
-            }]
+
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}]
         )
 
         content = response.choices[0].message.content
-        new_data = clean_json(content)
+        data = clean_json(content)
 
-        return new_data if new_data else data
+        return data if data else structured_data
 
     except Exception as e:
         print("REWRITE ERROR:", e)
-        return data
+        return structured_data
 
-# ---------------- OPTIMIZE ----------------
+# ---------------- OPTIMIZE RESUME ----------------
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
     try:
         extracted = extract_resume_data(data.resume)
 
-        # 🔥 NO MORE CRASH
+        # 🔥 NO CRASH (fallback)
         if not extracted:
             extracted = {
                 "name": "",
@@ -198,7 +229,7 @@ def create_order(data: PaymentRequest):
         print("ORDER ERROR:", e)
         raise HTTPException(status_code=500, detail="Order failed")
 
-# ---------------- VERIFY ----------------
+# ---------------- VERIFY PAYMENT ----------------
 @app.post("/verify-payment")
 def verify_payment(payload: dict):
     try:
