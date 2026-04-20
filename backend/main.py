@@ -10,7 +10,6 @@ import razorpay
 from jinja2 import Template
 from weasyprint import HTML
 
-
 # ---------------- ENV ----------------
 load_dotenv()
 
@@ -20,7 +19,6 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 if not all([RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, OPENAI_API_KEY]):
     raise Exception("Missing environment variables")
-
 
 # ---------------- APP ----------------
 app = FastAPI()
@@ -33,17 +31,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 # ---------------- CLIENTS ----------------
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-
 # ---------------- STORAGE ----------------
 resume_store = {}
 PRICE = 100  # ₹49
-os.makedirs("generated", exist_ok=True)
 
+os.makedirs("generated", exist_ok=True)
 
 # ---------------- MODELS ----------------
 class ResumeRequest(BaseModel):
@@ -51,23 +47,30 @@ class ResumeRequest(BaseModel):
     job_description: str
     template: str = "modern"
 
-
 class PaymentRequest(BaseModel):
     resume_id: str
 
-
-# ---------------- JSON CLEANER ----------------
-def clean_json(text: str):
+# ---------------- SAFE JSON PARSER ----------------
+def safe_json(text: str):
     try:
         text = text.strip()
 
+        # remove markdown
         if "```" in text:
-            text = text.split("```")[1]
+            parts = text.split("```")
+            text = parts[1] if len(parts) > 1 else text
 
-        return json.loads(text)
-    except:
+        start = text.find("{")
+        end = text.rfind("}")
+
+        if start == -1 or end == -1:
+            return {}
+
+        return json.loads(text[start:end+1])
+
+    except Exception as e:
+        print("JSON ERROR:", e)
         return {}
-
 
 # ---------------- OPTIMIZE RESUME ----------------
 @app.post("/optimize-resume")
@@ -79,29 +82,10 @@ You are a professional ATS resume writer.
 GOAL:
 Create a FULL, DETAILED, PROFESSIONAL resume.
 
-IMPORTANT:
-- Do NOT invent fake companies or projects
-- Do NOT add unrealistic achievements
-- BUT expand existing information strongly
-
 RULES:
-
-1. SUMMARY:
-- Write a 2–3 line professional summary based on resume + job description
-
-2. SKILLS:
-- Expand to 8–12 relevant skills (only from resume + job description)
-
-3. EXPERIENCE:
-- Each role must have 3–5 bullet points
-- Expand short lines into detailed sentences (12–20 words)
-
-4. PROJECTS:
-- Each project must have 2–4 bullet points
-
-5. CONTENT EXPANSION:
-- If content is small → expand using logical responsibilities
-- Use job description for context (NO fake roles)
+- Do NOT invent fake companies or projects
+- Expand existing information
+- Improve wording
 
 FORMAT (JSON ONLY):
 
@@ -111,20 +95,8 @@ FORMAT (JSON ONLY):
   "phone": "",
   "summary": "",
   "skills": [],
-  "experience": [
-    {{
-      "role": "",
-      "company": "",
-      "duration": "",
-      "points": []
-    }}
-  ],
-  "projects": [
-    {{
-      "name": "",
-      "points": []
-    }}
-  ],
+  "experience": [],
+  "projects": [],
   "education": []
 }}
 
@@ -137,14 +109,25 @@ JOB DESCRIPTION:
 
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
+            response_format={"type": "json_object"},  # 🔥 IMPORTANT FIX
             messages=[{"role": "user", "content": prompt}]
         )
 
         content = response.choices[0].message.content
-        parsed = clean_json(content)
+        parsed = safe_json(content)
 
+        # 🔥 NEVER CRASH
         if not parsed:
-            raise HTTPException(status_code=500, detail="AI parsing failed")
+            parsed = {
+                "name": "",
+                "email": "",
+                "phone": "",
+                "summary": "",
+                "skills": [],
+                "experience": [],
+                "projects": [],
+                "education": []
+            }
 
         resume_id = str(len(resume_store) + 1)
 
@@ -167,7 +150,6 @@ JOB DESCRIPTION:
         print("OPTIMIZE ERROR:", e)
         raise HTTPException(status_code=500, detail="Processing failed")
 
-
 # ---------------- CREATE ORDER ----------------
 @app.post("/create-order")
 def create_order(data: PaymentRequest):
@@ -183,7 +165,6 @@ def create_order(data: PaymentRequest):
     resume_store[data.resume_id]["order_id"] = order["id"]
 
     return order
-
 
 # ---------------- VERIFY PAYMENT ----------------
 @app.post("/verify-payment")
@@ -206,7 +187,6 @@ def verify_payment(payload: dict):
 
     return {"download_url": f"/download/{resume_id}"}
 
-
 # ---------------- PDF ----------------
 def generate_pdf(resume_id: str):
     data = resume_store[resume_id]["data"]
@@ -223,7 +203,6 @@ def generate_pdf(resume_id: str):
     resume_store[resume_id]["file"] = file_path
 
     return file_path
-
 
 # ---------------- DOWNLOAD ----------------
 @app.get("/download/{resume_id}")
