@@ -3,96 +3,58 @@
 <head>
 <style>
 body {
-  font-family: 'Georgia', serif;
-  margin: 40px;
-  color: #222;
+  font-family: Arial;
+  padding: 40px;
 }
 
-/* HEADER */
 h1 {
-  font-size: 26px;
-  margin-bottom: 4px;
+  font-size: 24px;
 }
 
-.contact {
-  font-size: 13px;
-  color: #555;
-  margin-bottom: 20px;
-}
-
-/* SECTION */
-.section {
-  margin-top: 25px;
-}
-
-.section h2 {
+h2 {
   font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
   border-bottom: 1px solid #000;
-  padding-bottom: 4px;
-  margin-bottom: 10px;
+  margin-top: 20px;
 }
 
-/* LIST */
-ul {
-  padding-left: 18px;
-  margin: 0;
+p, li {
+  font-size: 12px;
 }
-
-li {
-  margin-bottom: 6px;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-/* EXPERIENCE BLOCK */
-.exp-item {
-  margin-bottom: 10px;
-}
-
 </style>
 </head>
 
 <body>
 
 <h1>{{name}}</h1>
-<p class="contact">{{email}} | {{phone}}</p>
+<p>{{email}} | {{phone}}</p>
 
-<div class="section">
-  <h2>Skills</h2>
-  <ul>
-    {% for skill in skills %}
-      <li>{{skill}}</li>
-    {% endfor %}
-  </ul>
-</div>
+<h2>Skills</h2>
+<p>{{skills | join(", ")}}</p>
 
-<div class="section">
-  <h2>Experience</h2>
-  <div class="section">
-  <h2>Projects</h2>
-  <ul>
-    {% for p in projects %}
-      <li>{{p}}</li>
-    {% endfor %}
-  </ul>
-</div>
-  {% for exp in experience %}
-    <div class="exp-item">
-      • {{exp}}
-    </div>
-  {% endfor %}
-</div>
+<h2>Experience</h2>
+{% for exp in experience %}
+<p><b>{{exp.role}} - {{exp.company}}</b></p>
+<ul>
+{% for p in exp.points %}
+<li>{{p}}</li>
+{% endfor %}
+</ul>
+{% endfor %}
 
-<div class="section">
-  <h2>Education</h2>
-  <ul>
-    {% for edu in education %}
-      <li>{{edu}}</li>
-    {% endfor %}
-  </ul>
-</div>
+<h2>Projects</h2>
+{% for p in projects %}
+<p><b>{{p.name}}</b></p>
+<ul>
+{% for point in p.points %}
+<li>{{point}}</li>
+{% endfor %}
+</ul>
+{% endfor %}
+
+<h2>Education</h2>
+{% for e in education %}
+<p>{{e}}</p>
+{% endfor %}
 
 </body>
 </html>

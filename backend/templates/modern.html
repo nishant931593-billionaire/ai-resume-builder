@@ -1,126 +1,137 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
 <style>
 body {
-  font-family: 'Segoe UI', sans-serif;
   margin: 0;
-  color: #2c3e50;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .container {
   display: flex;
-  min-height: 100vh;
 }
 
-/* LEFT SIDEBAR */
+/* LEFT */
 .left {
-  width: 30%;
-  background: #2c3e50;
+  width: 32%;
+  background: #1e40af;
   color: white;
-  padding: 25px;
-}
-
-.left h1 {
-  margin-bottom: 10px;
-  font-size: 24px;
-}
-
-.left p {
-  font-size: 13px;
-  margin: 5px 0;
-}
-
-/* RIGHT CONTENT */
-.right {
-  width: 70%;
   padding: 30px;
-  background: #fff;
 }
 
-/* SECTION */
+.name {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.contact {
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+
 .section {
-  margin-bottom: 25px;
+  margin-top: 25px;
 }
 
 .section h2 {
-  font-size: 16px;
-  color: #3498db;
-  border-bottom: 2px solid #3498db;
+  font-size: 13px;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.4);
   padding-bottom: 5px;
+}
+
+.section li {
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+/* RIGHT */
+.right {
+  width: 68%;
+  padding: 30px;
+}
+
+.title {
+  color: #1e40af;
+  font-size: 16px;
   margin-bottom: 10px;
 }
 
-/* LIST STYLING */
-ul {
-  padding-left: 18px;
+.job {
+  margin-bottom: 20px;
+}
+
+.job h3 {
+  font-size: 14px;
   margin: 0;
 }
 
-li {
-  margin-bottom: 8px;
-  font-size: 14px;
-  line-height: 1.5;
+.job span {
+  font-size: 11px;
+  color: gray;
 }
 
-/* EXPERIENCE BLOCK */
-.exp-item {
-  margin-bottom: 12px;
+.job li {
+  font-size: 12px;
+  margin-bottom: 5px;
 }
-
 </style>
 </head>
 
 <body>
+
 <div class="container">
 
-  <!-- LEFT -->
-  <div class="left">
-    <h1>{{name}}</h1>
-    <p>{{email}}</p>
-    <p>{{phone}}</p>
+<div class="left">
+  <div class="name">{{name}}</div>
+  <div class="contact">{{email}} | {{phone}}</div>
 
-    <div class="section">
-      <h2>Skills</h2>
-      <ul>
-        {% for skill in skills %}
-          <li>{{skill}}</li>
-        {% endfor %}
-      </ul>
-    </div>
-  </div>
-
-  <!-- RIGHT -->
-  <div class="right">
-
-    <div class="section">
-      <h2>Experience</h2>
-      <div class="section">
-  <h2>Projects</h2>
-  <ul>
-    {% for p in projects %}
-      <li>{{p}}</li>
-    {% endfor %}
-  </ul>
-</div>
-      {% for exp in experience %}
-        <div class="exp-item">
-          • {{exp}}
-        </div>
+  <div class="section">
+    <h2>Skills</h2>
+    <ul>
+      {% for s in skills %}
+      <li>{{s}}</li>
       {% endfor %}
-    </div>
-
-    <div class="section">
-      <h2>Education</h2>
-      <ul>
-        {% for edu in education %}
-          <li>{{edu}}</li>
-        {% endfor %}
-      </ul>
-    </div>
-
+    </ul>
   </div>
+</div>
+
+<div class="right">
+
+  <div class="title">Experience</div>
+  {% for exp in experience %}
+  <div class="job">
+    <h3>{{exp.role}} - {{exp.company}}</h3>
+    <span>{{exp.duration}}</span>
+    <ul>
+      {% for p in exp.points %}
+      <li>{{p}}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+
+  <div class="title">Projects</div>
+  {% for p in projects %}
+  <div class="job">
+    <h3>{{p.name}}</h3>
+    <ul>
+      {% for point in p.points %}
+      <li>{{point}}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+
+  <div class="title">Education</div>
+  {% for e in education %}
+  <p>{{e}}</p>
+  {% endfor %}
 
 </div>
+
+</div>
+
 </body>
 </html>
