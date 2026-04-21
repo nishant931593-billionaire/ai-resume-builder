@@ -63,7 +63,7 @@ def safe_json(text: str):
     except:
         return {}
 
-# ---------------- ENRICH (PREMIUM FIX) ----------------
+# ---------------- ENRICH ----------------
 def enrich(data):
     data.setdefault("name", "")
     data.setdefault("email", "")
@@ -75,58 +75,84 @@ def enrich(data):
     data.setdefault("projects", [])
     data.setdefault("education", [])
 
-    # 🔥 Strong summary
+    # 🔥 Summary
     if not data["summary"]:
         data["summary"] = (
-            "Results-driven professional with strong analytical and problem-solving skills. "
-            "Experienced in delivering high-quality work, collaborating with teams, and "
-            "adapting quickly to new challenges while maintaining efficiency and accuracy."
+            "Detail-oriented professional with strong analytical and problem-solving skills. "
+            "Experienced in collaborating with teams, analyzing data, and delivering "
+            "high-quality results in fast-paced environments."
         )
 
-    # 🔥 Ensure enough skills
+    # 🔥 Skills (min 6)
     if len(data["skills"]) < 6:
-        data["skills"] = list(set(data["skills"] + [
+        extras = [
             "Communication", "Problem Solving", "Teamwork",
             "Time Management", "Adaptability", "Attention to Detail"
-        ]))
+        ]
+        for s in extras:
+            if s not in data["skills"]:
+                data["skills"].append(s)
+            if len(data["skills"]) >= 6:
+                break
 
-    # 🔥 Expand experience
+    # 🔥 Experience (NO repetition)
+    DEFAULT_EXP_POINTS = [
+        "Analyzed data to identify trends and support business decisions",
+        "Prepared reports and dashboards to present insights clearly",
+        "Collaborated with cross-functional teams to deliver tasks efficiently",
+        "Cleaned and structured data to improve accuracy and usability"
+    ]
+
     for exp in data["experience"]:
+        exp.setdefault("role", "")
+        exp.setdefault("company", "")
+        exp.setdefault("duration", "")
         exp.setdefault("points", [])
-        while len(exp["points"]) < 4:
-            exp["points"].append(
-                "Collaborated with cross-functional teams to complete tasks efficiently while maintaining quality standards."
-            )
 
-    # 🔥 Expand projects
+        i = 0
+        while len(exp["points"]) < 4 and i < len(DEFAULT_EXP_POINTS):
+            if DEFAULT_EXP_POINTS[i] not in exp["points"]:
+                exp["points"].append(DEFAULT_EXP_POINTS[i])
+            i += 1
+
+    # 🔥 Projects
+    DEFAULT_PROJECT_POINTS = [
+        "Designed and developed features aligned with project requirements",
+        "Implemented structured solutions ensuring performance and usability",
+        "Tested and refined functionality to improve overall experience"
+    ]
+
     for proj in data["projects"]:
+        proj.setdefault("name", "")
+        proj.setdefault("description", "")
         proj.setdefault("points", [])
-        while len(proj["points"]) < 3:
-            proj["points"].append(
-                "Designed and developed features aligned with project requirements, ensuring performance and usability."
-            )
+
+        i = 0
+        while len(proj["points"]) < 3 and i < len(DEFAULT_PROJECT_POINTS):
+            if DEFAULT_PROJECT_POINTS[i] not in proj["points"]:
+                proj["points"].append(DEFAULT_PROJECT_POINTS[i])
+            i += 1
 
     return data
 
-# ---------------- AI GENERATION ----------------
+# ---------------- AI ----------------
 def generate_resume(resume_text, job_description):
     prompt = f"""
-Rewrite this resume into a PREMIUM ATS-optimized format.
+You are a professional resume writer.
 
 STRICT:
-- No fake experience
-- No fake projects
-- No fake metrics
+- Do NOT add fake experience or projects
+- Only improve existing content
 
 GOAL:
-- Make it LOOK full, strong, and professional
-- Expand wording naturally
+Make the resume PREMIUM and HUMAN-WRITTEN
 
-REQUIRE:
+RULES:
 - Add title
-- Add strong summary (4 lines)
-- Experience: 3-5 bullet points each
-- Projects: 2-3 bullet points each
+- Add 3–4 line summary
+- Experience → 3–5 UNIQUE bullet points
+- Projects → 2–3 bullet points
+- Avoid repetition
 
 OUTPUT JSON:
 
@@ -137,9 +163,28 @@ OUTPUT JSON:
   "title": "",
   "summary": "",
   "skills": [],
-  "experience": [],
-  "projects": [],
-  "education": []
+  "experience": [
+    {{
+      "role": "",
+      "company": "",
+      "duration": "",
+      "points": []
+    }}
+  ],
+  "projects": [
+    {{
+      "name": "",
+      "description": "",
+      "points": []
+    }}
+  ],
+  "education": [
+    {{
+      "degree": "",
+      "institution": "",
+      "year": ""
+    }}
+  ]
 }}
 
 RESUME:
