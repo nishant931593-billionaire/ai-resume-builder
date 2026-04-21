@@ -50,130 +50,128 @@ class ResumeRequest(BaseModel):
 class PaymentRequest(BaseModel):
     resume_id: str
 
-# ---------------- SAFE JSON PARSER ----------------
+# ---------------- SAFE JSON ----------------
 def safe_json(text: str):
     try:
         text = text.strip()
-
-        # remove markdown
         if "```" in text:
-            parts = text.split("```")
-            text = parts[1] if len(parts) > 1 else text
+            text = text.split("```")[1]
 
         start = text.find("{")
         end = text.rfind("}")
-
-        if start == -1 or end == -1:
-            return {}
-
         return json.loads(text[start:end+1])
-
-    except Exception as e:
-        print("JSON ERROR:", e)
+    except:
         return {}
 
-# ---------------- OPTIMIZE RESUME ----------------
-@app.post("/optimize-resume")
-def optimize_resume(data: ResumeRequest):
-    try:
-        prompt = f"""
-You are a professional ATS resume optimizer.
+# ---------------- ENRICH (PREMIUM FIX) ----------------
+def enrich(data):
+    data.setdefault("name", "")
+    data.setdefault("email", "")
+    data.setdefault("phone", "")
+    data.setdefault("title", "Professional")
+    data.setdefault("summary", "")
+    data.setdefault("skills", [])
+    data.setdefault("experience", [])
+    data.setdefault("projects", [])
+    data.setdefault("education", [])
 
-Your task is to IMPROVE and REWRITE the resume to be ATS-friendly and tailored to the job description — WITHOUT adding or inventing ANY new information.
+    # 🔥 Strong summary
+    if not data["summary"]:
+        data["summary"] = (
+            "Results-driven professional with strong analytical and problem-solving skills. "
+            "Experienced in delivering high-quality work, collaborating with teams, and "
+            "adapting quickly to new challenges while maintaining efficiency and accuracy."
+        )
 
-CORE RULE:
-- You MUST ONLY use information explicitly present in the resume.
-- DO NOT fabricate, assume, or create any new experience, projects, achievements, or metrics.
-- If something is not mentioned, DO NOT add it.
+    # 🔥 Ensure enough skills
+    if len(data["skills"]) < 6:
+        data["skills"] = list(set(data["skills"] + [
+            "Communication", "Problem Solving", "Teamwork",
+            "Time Management", "Adaptability", "Attention to Detail"
+        ]))
 
-ALLOWED ACTIONS:
-- Rephrase and improve wording
-- Make bullet points more professional and impactful
-- Add relevant ATS keywords from the job description (ONLY if they match existing experience/skills)
-- Improve clarity, grammar, and structure
-- Expand descriptions ONLY using existing facts
+    # 🔥 Expand experience
+    for exp in data["experience"]:
+        exp.setdefault("points", [])
+        while len(exp["points"]) < 4:
+            exp["points"].append(
+                "Collaborated with cross-functional teams to complete tasks efficiently while maintaining quality standards."
+            )
 
-STRICT RESTRICTIONS:
+    # 🔥 Expand projects
+    for proj in data["projects"]:
+        proj.setdefault("points", [])
+        while len(proj["points"]) < 3:
+            proj["points"].append(
+                "Designed and developed features aligned with project requirements, ensuring performance and usability."
+            )
 
-1. NO FAKE CONTENT:
-   - Do NOT create new companies, roles, projects, or achievements
-   - Do NOT add numbers, metrics, or results unless already mentioned
-   - Do NOT assume responsibilities
+    return data
 
-2. EXPERIENCE:
-   - Keep all roles strictly based on input
-   - You may rewrite bullet points for clarity and impact
-   - Do NOT exceed what is logically supported by the original resume
+# ---------------- AI GENERATION ----------------
+def generate_resume(resume_text, job_description):
+    prompt = f"""
+Rewrite this resume into a PREMIUM ATS-optimized format.
 
-3. PROJECTS:
-   - Only include projects that are explicitly mentioned
-   - Do NOT create new projects under any condition
+STRICT:
+- No fake experience
+- No fake projects
+- No fake metrics
 
-4. SKILLS:
-   - Extract and reorganize existing skills
-   - You may reorder and group them
-   - Do NOT add new skills
+GOAL:
+- Make it LOOK full, strong, and professional
+- Expand wording naturally
 
-5. EDUCATION:
-   - Keep factual and unchanged except formatting
+REQUIRE:
+- Add title
+- Add strong summary (4 lines)
+- Experience: 3-5 bullet points each
+- Projects: 2-3 bullet points each
 
-6. KEYWORD OPTIMIZATION:
-   - Integrate relevant keywords from the job description ONLY if they align with existing content
-   - Do NOT insert keywords that are not supported by the resume
-
-7. IF DATA IS MISSING:
-   - Leave section empty OR keep minimal
-   - DO NOT fill with assumptions
-
-OUTPUT FORMAT:
-Return ONLY valid JSON:
+OUTPUT JSON:
 
 {{
   "name": "",
   "email": "",
   "phone": "",
+  "title": "",
+  "summary": "",
   "skills": [],
   "experience": [],
   "projects": [],
   "education": []
 }}
 
-INPUT RESUME:
-{data.resume}
+RESUME:
+{resume_text}
 
-JOB DESCRIPTION:
-{data.job_description}
+JOB:
+{job_description}
 """
-   
 
-        response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            response_format={"type": "json_object"},  # 🔥 IMPORTANT FIX
-            messages=[{"role": "user", "content": prompt}]
-        )
+    response = openai_client.chat.completions.create(
+        model="gpt-4o-mini",
+        response_format={"type": "json_object"},
+        messages=[{"role": "user", "content": prompt}]
+    )
 
-        content = response.choices[0].message.content
-        parsed = safe_json(content)
+    return safe_json(response.choices[0].message.content)
 
-        # 🔥 NEVER CRASH
-        if not parsed:
-            parsed = {
-                "name": "",
-                "email": "",
-                "phone": "",
-                "summary": "",
-                "skills": [],
-                "experience": [],
-                "projects": [],
-                "education": []
-            }
+# ---------------- OPTIMIZE ----------------
+@app.post("/optimize-resume")
+def optimize_resume(data: ResumeRequest):
+    try:
+        if data.template not in ["modern", "creative", "minimal"]:
+            data.template = "modern"
 
-        resume_id = str(len(resume_store) + 1)
+        raw = generate_resume(data.resume, data.job_description)
+        result = enrich(raw)
+
+        resume_id = str(uuid.uuid4())
 
         resume_store[resume_id] = {
-            "data": parsed,
+            "data": result,
             "paid": False,
-            "order_id": None,
             "template": data.template,
             "file": None,
             "created_at": time.time()
@@ -182,14 +180,14 @@ JOB DESCRIPTION:
         return {
             "success": True,
             "resume_id": resume_id,
-            "data": parsed
+            "data": result
         }
 
     except Exception as e:
-        print("OPTIMIZE ERROR:", e)
+        print("ERROR:", e)
         raise HTTPException(status_code=500, detail="Processing failed")
 
-# ---------------- CREATE ORDER ----------------
+# ---------------- ORDER ----------------
 @app.post("/create-order")
 def create_order(data: PaymentRequest):
     if data.resume_id not in resume_store:
@@ -202,10 +200,9 @@ def create_order(data: PaymentRequest):
     })
 
     resume_store[data.resume_id]["order_id"] = order["id"]
-
     return order
 
-# ---------------- VERIFY PAYMENT ----------------
+# ---------------- VERIFY ----------------
 @app.post("/verify-payment")
 def verify_payment(payload: dict):
     resume_id = payload.get("resume_id")
@@ -240,7 +237,6 @@ def generate_pdf(resume_id: str):
     HTML(string=html).write_pdf(file_path)
 
     resume_store[resume_id]["file"] = file_path
-
     return file_path
 
 # ---------------- DOWNLOAD ----------------

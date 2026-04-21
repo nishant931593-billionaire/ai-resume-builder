@@ -7,102 +7,96 @@
 
 /* 🌐 BODY */
 body {
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
   background: linear-gradient(135deg, #eef2ff, #f8fafc);
-  min-height: 100vh;
+  color: #1f2937;
+  letter-spacing: 0.2px;
 }
 
 /* 📦 CONTAINER */
 .container {
-  max-width: 800px;
+  max-width: 1100px;
   margin: auto;
-  padding: 30px 20px;
+  padding: 40px 20px;
 }
 
 /* 🧠 HERO */
 .hero {
   text-align: center;
-  margin-bottom: 25px;
+  margin-bottom: 30px;
 }
 
-h1 {
-  font-size: 32px;
-  color: #1a202c;
-  margin-bottom: 10px;
+.hero h1 {
+  font-size: 34px;
+  font-weight: 700;
+  color: #111827;
 }
 
 .subtitle {
-  color: #555;
-  font-size: 15px;
+  color: #6b7280;
+  font-size: 16px;
+  margin-top: 8px;
 }
 
 /* 🧾 CARD */
 .card {
-  background: #fff;
-  padding: 22px;
+  background: #ffffff;
+  padding: 25px;
   margin-top: 20px;
-  border-radius: 16px;
-  box-shadow: 0 12px 35px rgba(0,0,0,0.08);
-  transition: 0.25s ease;
+  border-radius: 18px;
+  box-shadow: 0 20px 45px rgba(0,0,0,0.08);
+  transition: all 0.25s ease;
 }
 
 .card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-6px) scale(1.01);
 }
 
 /* ✏️ INPUTS */
 textarea {
   width: 100%;
-  height: 120px;
+  height: 130px;
   padding: 14px;
   margin-top: 8px;
   margin-bottom: 15px;
   border-radius: 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #e5e7eb;
   font-size: 14px;
   resize: none;
-  transition: 0.2s;
+  transition: all 0.2s;
+  background: #f9fafb;
 }
 
 textarea:focus {
-  border-color: #5a67d8;
-  box-shadow: 0 0 10px rgba(90,103,216,0.35);
+  border-color: #6366f1;
+  box-shadow: 0 0 12px rgba(99,102,241,0.25);
   outline: none;
+  background: #fff;
 }
 
 /* 🎨 SELECT */
 select {
   width: 100%;
   padding: 12px;
-  margin-top: 8px;
-  margin-bottom: 15px;
   border-radius: 12px;
-  border: 1px solid #ddd;
-  font-size: 14px;
-}
-
-/* 👀 TEMPLATE PREVIEW */
-.preview-box {
-  margin: 10px 0;
-  padding: 12px;
-  background: #eef2ff;
-  border-radius: 10px;
-  font-size: 14px;
-  color: #444;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 15px;
+  background: #f9fafb;
 }
 
 /* 🚀 MAIN BUTTON */
 .main-btn {
   width: 100%;
-  padding: 15px;
+  padding: 16px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, #5a67d8, #667eea);
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
   color: white;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: 0.25s;
+  box-shadow: 0 10px 25px rgba(99,102,241,0.4);
 }
 
 .main-btn:hover {
@@ -110,23 +104,105 @@ select {
   opacity: 0.95;
 }
 
-/* 📄 RESULT */
-#result {
-  margin-top: 10px;
-  padding: 16px;
-  background: #f9fafc;
-  border-radius: 12px;
-  white-space: pre-wrap;
-  font-size: 14px;
-  line-height: 1.7;
-  max-height: 320px;
+/* ==============================
+   🎯 PREMIUM RESUME PREVIEW
+================================ */
+
+#previewBox {
+  max-height: 650px;
   overflow-y: auto;
 }
 
-/* 🔒 BLUR */
-.blur {
-  filter: blur(6px);
-  user-select: none;
+.resume-preview {
+  background: white;
+  width: 100%;
+  max-width: 700px;
+  margin: auto;
+  padding: 40px;
+  border-radius: 6px;
+
+  /* 📄 A4 LOOK */
+  aspect-ratio: 1 / 1.414;
+
+  /* 💎 SHADOW */
+  box-shadow: 0 25px 60px rgba(0,0,0,0.12);
+}
+
+/* HEADER */
+.rp-header {
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 12px;
+  margin-bottom: 15px;
+}
+
+.rp-header h2 {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.rp-header p {
+  color: #6366f1;
+  font-weight: 500;
+}
+
+.rp-header small {
+  color: #6b7280;
+}
+
+/* SECTIONS */
+.rp-section {
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.rp-section h3 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #4f46e5;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+/* SKILLS */
+.rp-skills {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.rp-skills span {
+  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+  padding: 6px 12px;
+  margin: 5px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* EXPERIENCE */
+.rp-job {
+  margin-bottom: 15px;
+}
+
+.rp-job strong {
+  font-size: 14px;
+}
+
+.rp-duration {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 5px;
+}
+
+.rp-job ul {
+  padding-left: 18px;
+}
+
+.rp-job li {
+  font-size: 13px;
+  margin-bottom: 5px;
 }
 
 /* 📊 ATS */
@@ -136,56 +212,64 @@ select {
   padding: 15px;
 }
 
-/* 💰 PAYMENT (IMPORTANT FOR CONVERSION) */
+/* 🔒 BLUR */
+.blur {
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* 💰 PAYMENT */
 #paymentSection {
-  background: #fff;
-  border: 2px solid #5a67d8;
-  border-radius: 16px;
+  background: white;
+  border: 2px solid #6366f1;
+  border-radius: 18px;
   padding: 25px;
   text-align: center;
+
+  /* 🔥 STICKY CONVERSION */
+  position: sticky;
+  bottom: 20px;
 }
 
 /* 💸 PRICE */
 .price {
-  font-size: 28px;
-  font-weight: bold;
-  margin: 12px 0;
-  color: #1a202c;
+  font-size: 30px;
+  font-weight: 700;
+  color: #111827;
 }
 
 /* ⚠ WARNING */
 .warning {
-  color: #e53e3e;
+  color: #dc2626;
   font-weight: 600;
-  font-size: 14px;
+  margin-top: 5px;
 }
 
-/* 💳 PAY BUTTON (MAKE THIS DOMINANT) */
+/* 💳 PAY BUTTON */
 .pay-btn {
   width: 100%;
   margin-top: 18px;
   padding: 16px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, #111, #333);
-  color: #fff;
+  background: linear-gradient(135deg, #111827, #1f2937);
+  color: white;
   font-size: 17px;
   font-weight: bold;
   cursor: pointer;
   transition: 0.25s;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
 }
 
 .pay-btn:hover {
-  transform: scale(1.02);
-  background: linear-gradient(135deg, #000, #222);
+  transform: scale(1.03);
 }
 
 /* 🔐 TRUST */
 .trust {
   margin-top: 10px;
   font-size: 13px;
-  color: #777;
-  line-height: 1.5;
+  color: #6b7280;
 }
 
 /* 📊 COMPARE */
@@ -199,60 +283,53 @@ select {
   flex: 1;
   padding: 14px;
   border-radius: 10px;
-  font-size: 14px;
 }
 
 .bad-box {
-  background: #ffe5e5;
-  color: #c53030;
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .good-box {
-  background: #e6fffa;
-  color: #2f855a;
+  background: #dcfce7;
+  color: #15803d;
 }
 
 /* 📚 SECTIONS */
 .section {
-  margin-top: 25px;
+  margin-top: 30px;
 }
 
 .section h2 {
   font-size: 18px;
   margin-bottom: 10px;
-  color: #1a202c;
 }
 
-/* 📋 LIST */
-ul {
-  margin-top: 8px;
-  padding-left: 18px;
-}
-
-li {
-  margin-bottom: 6px;
-  font-size: 14px;
-  color: #444;
-}
-
-/* 🔥 SOCIAL */
-.social-proof {
+/* ⏳ LOADING */
+.loading {
   text-align: center;
   font-size: 14px;
-  color: #555;
+  color: #6b7280;
+  animation: pulse 1.2s infinite;
 }
 
-/* 📱 MOBILE OPTIMIZATION */
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+/* 📱 MOBILE */
 @media (max-width: 600px) {
-  h1 {
-    font-size: 24px;
+  .container {
+    padding: 20px;
   }
 
   .compare {
     flex-direction: column;
   }
 
-  .container {
-    padding: 20px 15px;
+  .resume-preview {
+    padding: 25px;
   }
 }

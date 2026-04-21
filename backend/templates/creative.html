@@ -1,67 +1,183 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
+
 <style>
 @page {
   size: A4;
-  margin: 15mm;
-}
-body {
-  font-family: 'Segoe UI';
   margin: 0;
 }
 
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  color: #111827;
+}
+
+/* HEADER */
 .header {
-  background: linear-gradient(90deg, #7c3aed, #2563eb);
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
   color: white;
+  padding: 40px 50px 30px 50px;
+}
+
+.name {
+  font-size: 34px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.contact {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+/* MAIN LAYOUT */
+.container {
+  display: flex;
+}
+
+/* LEFT SIDEBAR */
+.left {
+  width: 30%;
+  background: #f3f4f6;
   padding: 30px;
 }
 
-.header h1 {
-  margin: 0;
+.left h2 {
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin-bottom: 10px;
 }
 
+.left ul {
+  padding-left: 18px;
+}
+
+.left li {
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+/* RIGHT CONTENT */
+.right {
+  width: 70%;
+  padding: 30px 40px;
+}
+
+/* SECTION */
 .section {
-  padding: 20px 30px;
+  margin-bottom: 25px;
 }
 
 .section h2 {
+  font-size: 14px;
+  text-transform: uppercase;
   color: #7c3aed;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 5px;
+  margin-bottom: 12px;
 }
 
+/* CARD STYLE */
 .card {
-  background: #f3f4f6;
-  padding: 15px;
   margin-bottom: 15px;
-  border-radius: 10px;
+}
+
+.role {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.company {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 5px;
+}
+
+ul {
+  padding-left: 18px;
+}
+
+li {
+  font-size: 12px;
+  margin-bottom: 5px;
 }
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-  <h1>{{name}}</h1>
-  <p>{{email}} | {{phone}}</p>
+  <div class="name">{{name}}</div>
+  <div class="contact">{{email}} | {{phone}}</div>
 </div>
 
-<div class="section">
-  <h2>Skills</h2>
-  <p>{{skills | join(", ")}}</p>
-</div>
+<div class="container">
 
-<div class="section">
-  <h2>Experience</h2>
-  {% for exp in experience %}
-  <div class="card">
-    <b>{{exp.role}} - {{exp.company}}</b>
-    <ul>
-    {% for p in exp.points %}
-    <li>{{p}}</li>
-    {% endfor %}
-    </ul>
+  <!-- LEFT -->
+  <div class="left">
+
+    <div class="section">
+      <h2>Skills</h2>
+      <ul>
+        {% for s in skills %}
+        <li>{{s}}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>Education</h2>
+      {% for e in education %}
+      <p style="font-size:12px; margin-bottom:8px;">{{e}}</p>
+      {% endfor %}
+    </div>
+
   </div>
-  {% endfor %}
+
+  <!-- RIGHT -->
+  <div class="right">
+
+    <div class="section">
+      <h2>Experience</h2>
+
+      {% for exp in experience %}
+      <div class="card">
+        <div class="role">{{exp.role}}</div>
+        <div class="company">{{exp.company}} • {{exp.duration}}</div>
+        <ul>
+          {% for p in exp.points %}
+          <li>{{p}}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if projects %}
+    <div class="section">
+      <h2>Projects</h2>
+
+      {% for p in projects %}
+      <div class="card">
+        <div class="role">{{p.name}}</div>
+        <ul>
+          {% for point in p.points %}
+          <li>{{point}}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+
 </div>
 
 </body>

@@ -1,64 +1,180 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
+
 <style>
 @page {
   size: A4;
-  margin: 15mm;
+  margin: 20mm;
 }
+
 body {
-  font-family: Arial;
-  padding: 40px;
+  font-family: 'Segoe UI', sans-serif;
+  color: #222;
+  line-height: 1.6;
 }
 
-h1 {
-  font-size: 24px;
+/* HEADER */
+.header {
+  text-align: center;
+  margin-bottom: 25px;
 }
 
-h2 {
+.name {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.title {
   font-size: 14px;
-  border-bottom: 1px solid #000;
-  margin-top: 20px;
+  color: #666;
+  margin-top: 5px;
 }
 
-p, li {
+.contact {
   font-size: 12px;
+  margin-top: 10px;
+  color: #444;
+}
+
+/* SECTION */
+.section {
+  margin-top: 25px;
+}
+
+.section h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+  margin-bottom: 12px;
+}
+
+/* TEXT */
+p {
+  font-size: 13px;
+}
+
+ul {
+  padding-left: 18px;
+}
+
+li {
+  font-size: 13px;
+  margin-bottom: 5px;
+}
+
+/* EXPERIENCE */
+.job {
+  margin-bottom: 15px;
+}
+
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.company {
+  color: #444;
+}
+
+.duration {
+  font-size: 11px;
+  color: #777;
+}
+
+/* SUMMARY */
+.summary {
+  font-size: 13px;
+  color: #333;
 }
 </style>
 </head>
 
 <body>
 
-<h1>{{name}}</h1>
-<p>{{email}} | {{phone}}</p>
+<!-- HEADER -->
+<div class="header">
+  <div class="name">{{name}}</div>
+  <div class="title">{{title}}</div>
+  <div class="contact">{{email}} | {{phone}}</div>
+</div>
 
-<h2>Skills</h2>
-<p>{{skills | join(", ")}}</p>
+<!-- SUMMARY -->
+{% if summary %}
+<div class="section">
+  <h2>Profile</h2>
+  <p class="summary">{{summary}}</p>
+</div>
+{% endif %}
 
-<h2>Experience</h2>
-{% for exp in experience %}
-<p><b>{{exp.role}} - {{exp.company}}</b></p>
-<ul>
-{% for p in exp.points %}
-<li>{{p}}</li>
-{% endfor %}
-</ul>
-{% endfor %}
+<!-- SKILLS -->
+<div class="section">
+  <h2>Skills</h2>
+  <p>{{skills | join(", ")}}</p>
+</div>
 
-<h2>Projects</h2>
-{% for p in projects %}
-<p><b>{{p.name}}</b></p>
-<ul>
-{% for point in p.points %}
-<li>{{point}}</li>
-{% endfor %}
-</ul>
-{% endfor %}
+<!-- EXPERIENCE -->
+<div class="section">
+  <h2>Experience</h2>
 
-<h2>Education</h2>
-{% for e in education %}
-<p>{{e}}</p>
-{% endfor %}
+  {% for exp in experience %}
+  <div class="job">
+    <div class="job-header">
+      <div>
+        {{exp.role}} - <span class="company">{{exp.company}}</span>
+      </div>
+      <div class="duration">{{exp.duration}}</div>
+    </div>
+
+    <ul>
+      {% for p in exp.points %}
+      <li>{{p}}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- PROJECTS -->
+{% if projects %}
+<div class="section">
+  <h2>Projects</h2>
+
+  {% for p in projects %}
+  <div class="job">
+    <strong>{{p.name}}</strong>
+
+    {% if p.description %}
+    <p>{{p.description}}</p>
+    {% endif %}
+
+    <ul>
+      {% for point in p.points %}
+      <li>{{point}}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- EDUCATION -->
+<div class="section">
+  <h2>Education</h2>
+
+  {% for e in education %}
+  <p>
+    <strong>{{e.degree}}</strong><br>
+    {{e.institution}}<br>
+    <small>{{e.year}}</small>
+  </p>
+  {% endfor %}
+</div>
 
 </body>
 </html>
