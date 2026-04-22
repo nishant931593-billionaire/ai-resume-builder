@@ -58,13 +58,12 @@ def safe_json(text: str):
         end = text.rfind("}")
         return json.loads(text[start:end + 1])
     except Exception as e:
-        print("JSON ERROR:", e)
+        print("❌ JSON ERROR:", e)
         return {}
 
-# ---------------- NORMALIZE FIX ----------------
+# ---------------- NORMALIZE ----------------
 def normalize(data):
 
-    # ---------- FIX EXPERIENCE ----------
     def fix_experience(exp_list):
         fixed = []
         for e in exp_list or []:
@@ -76,7 +75,6 @@ def normalize(data):
             })
         return fixed
 
-    # ---------- FIX PROJECTS ----------
     def fix_projects(proj_list):
         fixed = []
         for p in proj_list or []:
@@ -87,18 +85,14 @@ def normalize(data):
             })
         return fixed
 
-    # ---------- FIX EXTRA SECTIONS ----------
+    # FIX extra_sections structure
     fixed_extra = []
     raw_extra = data.get("extra_sections", [])
 
     if isinstance(raw_extra, list):
         for sec in raw_extra:
-
-            # Already correct
             if isinstance(sec, dict) and "title" in sec and "items" in sec:
                 fixed_extra.append(sec)
-
-            # Wrong format → convert
             elif isinstance(sec, dict):
                 for key, value in sec.items():
                     fixed_extra.append({
@@ -126,61 +120,25 @@ def generate_resume(resume_text, job_description):
     prompt = f"""
 You are a STRICT resume optimization engine.
 
-========================
-CORE RULES
-========================
-- NEVER invent fake data (no fake companies, roles, or achievements)
-- ONLY use information present in the resume
-- You MAY rewrite, expand, and structure content professionally
+CORE RULES:
+- NEVER invent fake data
+- ONLY use provided information
+- You MAY rewrite and enhance content professionally
 - ALWAYS return valid JSON
 
-========================
-SMART ENHANCEMENT RULES (IMPORTANT)
-========================
-If the resume is weak or has very limited information:
+SMART ENHANCEMENT:
+- Expand skills into detailed form
+- Improve summary professionally
+- If projects are missing → create practice-based projects
+- If experience is missing → describe learning, NOT fake jobs
 
-1. You MAY expand skills into more descriptive and professional wording
-   Example:
-   "Python" → "Python (data analysis, scripting, basic automation)"
+STRUCTURE:
+experience = role, company, duration, points[]
+projects = name, description, points[]
+extra_sections = title, items[]
 
-2. You MAY convert skills into practical usage statements
-   (without claiming real job experience)
-   Example:
-   "Used Python and Excel for solving data-related tasks and practice datasets"
-
-3. You MAY create "practice-based projects" IF no projects exist
-   - These must be generic and learning-based
-   - DO NOT attach them to companies
-   - DO NOT make unrealistic claims
-
-   Example:
-   "Data Analysis Practice"
-   - Worked with sample datasets using Excel and Python
-   - Performed data cleaning and basic visualization
-
-4. You MAY improve the summary to sound strong and professional
-   - Focus on skills, learning ability, and intent
-   - DO NOT add fake achievements
-
-5. If experience is missing:
-   - DO NOT create fake jobs
-   - You MAY describe learning, internships, or self-practice in a realistic way
-
-========================
-EXTRA SECTIONS RULE
-========================
-- Extract additional sections like:
-  certifications, hobbies, achievements, languages
-- Convert them into format:
-  {
-    "title": "Section Name",
-    "items": []
-  }
-
-========================
-OUTPUT FORMAT (STRICT JSON)
-========================
-{
+OUTPUT:
+{{
   "name": "",
   "email": "",
   "phone": "",
@@ -191,14 +149,14 @@ OUTPUT FORMAT (STRICT JSON)
   "projects": [],
   "education": [],
   "extra_sections": []
-}
+}}
 
-========================
 RESUME:
 {resume_text}
 
 JOB DESCRIPTION:
 {job_description}
+"""
 
     response = openai_client.chat.completions.create(
         model="gpt-4o-mini",
@@ -237,7 +195,7 @@ def optimize_resume(data: ResumeRequest):
         }
 
     except Exception as e:
-        print("ERROR:", e)
+        print("❌ ERROR:", e)
         raise HTTPException(status_code=500, detail="Processing failed")
 
 # ---------------- ORDER ----------------
