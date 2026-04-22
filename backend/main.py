@@ -127,7 +127,7 @@ CORE RULES:
 - ALWAYS return valid JSON
 
 SMART ENHANCEMENT:
-- Expand skills into detailed form
+
 - Improve summary professionally
 - If projects are missing → create practice-based projects
 - If experience is missing → describe learning, NOT fake jobs
