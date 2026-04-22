@@ -48,7 +48,6 @@ class ResumeRequest(BaseModel):
     job_description: str
     template: str = "modern"
 
-
 # ---------------- SAFE HELPERS ----------------
 def force_list(x):
     return x if isinstance(x, list) else []
@@ -72,8 +71,7 @@ def safe_json(text: str):
         print("JSON ERROR:", e)
         return {}
 
-
-# ---------------- NORMALIZE (CRITICAL FIX) ----------------
+# ---------------- NORMALIZE ----------------
 def normalize(data):
     return {
         "name": force_str(data.get("name")),
@@ -89,7 +87,6 @@ def normalize(data):
         "extra_sections": force_list(data.get("extra_sections")),
     }
 
-
 # ---------------- AI ENGINE ----------------
 def generate_resume(resume_text, job_description):
 
@@ -102,8 +99,8 @@ RULES:
 - ALWAYS return valid JSON
 
 IMPORTANT:
-- summary MUST exist (3–4 lines)
-- extra sections MUST be extracted if present
+- summary MUST exist (3-4 lines)
+- extract extra sections like hobbies, certifications if present
 
 OUTPUT:
 {{
@@ -134,7 +131,6 @@ JOB DESCRIPTION:
 
     return safe_json(response.choices[0].message.content)
 
-
 # ---------------- OPTIMIZE ----------------
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
@@ -145,8 +141,7 @@ def optimize_resume(data: ResumeRequest):
         raw = generate_resume(data.resume, data.job_description)
         result = normalize(raw)
 
-        # 🔥 DEBUG LOG
-        print("FINAL DATA:", result)
+        print("FINAL DATA:", result)  # debug
 
         resume_id = str(uuid.uuid4())
 
@@ -168,7 +163,6 @@ def optimize_resume(data: ResumeRequest):
         print("ERROR:", e)
         raise HTTPException(status_code=500, detail="Processing failed")
 
-
 # ---------------- ORDER ----------------
 @app.post("/create-order")
 def create_order(payload: dict):
@@ -187,7 +181,6 @@ def create_order(payload: dict):
     resume_store[resume_id]["order_id"] = order["id"]
 
     return order
-
 
 # ---------------- VERIFY ----------------
 @app.post("/verify-payment")
@@ -211,15 +204,21 @@ def verify_payment(payload: dict):
 
     return {"download_url": f"/download/{resume_id}"}
 
-
-# ---------------- PDF GENERATION (SAFE) ----------------
+# ---------------- PDF ----------------
 def generate_pdf(resume_id: str):
 
     data = resume_store[resume_id]["data"]
     template_name = resume_store[resume_id]["template"]
 
     try:
-        with open(f"templates/{template_name}.html", "r", encoding="utf-8") as f:
+        print("PDF DATA:", data)
+
+        template_path = f"templates/{template_name}.html"
+
+        if not os.path.exists(template_path):
+            raise HTTPException(status_code=500, detail="Template not found")
+
+        with open(template_path, "r", encoding="utf-8") as f:
             template = Template(f.read())
 
         html = template.render(**data)
@@ -234,7 +233,6 @@ def generate_pdf(resume_id: str):
     except Exception as e:
         print("PDF ERROR:", e)
         raise HTTPException(status_code=500, detail="PDF generation failed")
-
 
 # ---------------- DOWNLOAD ----------------
 @app.get("/download/{resume_id}")
@@ -254,7 +252,6 @@ def download_resume(resume_id: str):
         media_type="application/pdf",
         filename="resume.pdf"
     )
-
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":

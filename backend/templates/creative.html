@@ -121,15 +121,16 @@ li {
   print-color-adjust: exact;
 }
 </style>
+
 </head>
 
 <body>
 
 <!-- HEADER -->
 <div class="header">
-  <div class="name">{{ name or "" }}</div>
+  <div class="name">{{ name | default('') }}</div>
   <div class="contact">
-    {{ email or "" }}{% if phone %} | {{ phone }}{% endif %}
+    {{ email | default('') }}{% if phone %} | {{ phone }}{% endif %}
   </div>
 </div>
 
@@ -143,7 +144,7 @@ li {
     <div class="section">
       <h2>Skills</h2>
       <ul>
-        {% for s in skills %}
+        {% for s in skills | default([]) %}
         <li>{{ s }}</li>
         {% endfor %}
       </ul>
@@ -154,11 +155,11 @@ li {
     {% if education and education|length > 0 %}
     <div class="section">
       <h2>Education</h2>
-      {% for e in education %}
+      {% for e in education | default([]) %}
       <p style="font-size:12px; margin-bottom:8px;">
-        <strong>{{ e.degree or "" }}</strong><br>
-        {{ e.institution or "" }}<br>
-        <small>{{ e.year or "" }}</small>
+        <strong>{{ e.degree | default('') }}</strong><br>
+        {{ e.institution | default('') }}<br>
+        <small>{{ e.year | default('') }}</small>
       </p>
       {% endfor %}
     </div>
@@ -166,12 +167,12 @@ li {
 
     <!-- EXTRA SECTIONS -->
     {% if extra_sections and extra_sections|length > 0 %}
-      {% for sec in extra_sections %}
+      {% for sec in extra_sections | default([]) %}
         {% if sec.items and sec.items|length > 0 %}
         <div class="section">
-          <h2>{{ sec.title }}</h2>
+          <h2>{{ sec.title | default('') }}</h2>
           <ul>
-            {% for item in sec.items %}
+            {% for item in sec.items | default([]) %}
             <li>{{ item }}</li>
             {% endfor %}
           </ul>
@@ -189,7 +190,7 @@ li {
     {% if summary %}
     <div class="section">
       <h2>Profile</h2>
-      <p class="summary">{{ summary }}</p>
+      <p class="summary">{{ summary | default('') }}</p>
     </div>
     {% endif %}
 
@@ -198,16 +199,16 @@ li {
     <div class="section">
       <h2>Experience</h2>
 
-      {% for exp in experience %}
+      {% for exp in experience | default([]) %}
       <div class="card">
-        <div class="role">{{ exp.role or "" }}</div>
+        <div class="role">{{ exp.role | default('') }}</div>
         <div class="company">
-          {{ exp.company or "" }} • {{ exp.duration or "" }}
+          {{ exp.company | default('') }} • {{ exp.duration | default('') }}
         </div>
 
         {% if exp.points and exp.points|length > 0 %}
         <ul>
-          {% for p in exp.points %}
+          {% for p in exp.points | default([]) %}
           <li>{{ p }}</li>
           {% endfor %}
         </ul>
@@ -222,9 +223,9 @@ li {
     <div class="section">
       <h2>Projects</h2>
 
-      {% for p in projects %}
+      {% for p in projects | default([]) %}
       <div class="card">
-        <div class="role">{{ p.name or "" }}</div>
+        <div class="role">{{ p.name | default('') }}</div>
 
         {% if p.description %}
         <p class="summary">{{ p.description }}</p>
@@ -232,7 +233,7 @@ li {
 
         {% if p.points and p.points|length > 0 %}
         <ul>
-          {% for point in p.points %}
+          {% for point in p.points | default([]) %}
           <li>{{ point }}</li>
           {% endfor %}
         </ul>
