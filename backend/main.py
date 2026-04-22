@@ -126,13 +126,61 @@ def generate_resume(resume_text, job_description):
     prompt = f"""
 You are a STRICT resume optimization engine.
 
-RULES:
-- NEVER invent data
-- ONLY rewrite existing content
+========================
+CORE RULES
+========================
+- NEVER invent fake data (no fake companies, roles, or achievements)
+- ONLY use information present in the resume
+- You MAY rewrite, expand, and structure content professionally
 - ALWAYS return valid JSON
 
-OUTPUT:
-{{
+========================
+SMART ENHANCEMENT RULES (IMPORTANT)
+========================
+If the resume is weak or has very limited information:
+
+1. You MAY expand skills into more descriptive and professional wording
+   Example:
+   "Python" → "Python (data analysis, scripting, basic automation)"
+
+2. You MAY convert skills into practical usage statements
+   (without claiming real job experience)
+   Example:
+   "Used Python and Excel for solving data-related tasks and practice datasets"
+
+3. You MAY create "practice-based projects" IF no projects exist
+   - These must be generic and learning-based
+   - DO NOT attach them to companies
+   - DO NOT make unrealistic claims
+
+   Example:
+   "Data Analysis Practice"
+   - Worked with sample datasets using Excel and Python
+   - Performed data cleaning and basic visualization
+
+4. You MAY improve the summary to sound strong and professional
+   - Focus on skills, learning ability, and intent
+   - DO NOT add fake achievements
+
+5. If experience is missing:
+   - DO NOT create fake jobs
+   - You MAY describe learning, internships, or self-practice in a realistic way
+
+========================
+EXTRA SECTIONS RULE
+========================
+- Extract additional sections like:
+  certifications, hobbies, achievements, languages
+- Convert them into format:
+  {
+    "title": "Section Name",
+    "items": []
+  }
+
+========================
+OUTPUT FORMAT (STRICT JSON)
+========================
+{
   "name": "",
   "email": "",
   "phone": "",
@@ -143,14 +191,14 @@ OUTPUT:
   "projects": [],
   "education": [],
   "extra_sections": []
-}}
+}
 
+========================
 RESUME:
 {resume_text}
 
 JOB DESCRIPTION:
 {job_description}
-"""
 
     response = openai_client.chat.completions.create(
         model="gpt-4o-mini",
