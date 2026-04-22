@@ -59,8 +59,10 @@ function renderResume(data) {
 // ==============================
 // SECTION HELPERS
 // ==============================
+
 function section(title, content) {
-  if (!content) return "";
+  if (!content || content.trim() === "") return "";
+
   return `
     <div class="rp-section">
       <h3>${title}</h3>
@@ -70,7 +72,8 @@ function section(title, content) {
 }
 
 function skills(skills) {
-  if (!skills?.length) return "";
+  if (!Array.isArray(skills) || skills.length === 0) return "";
+
   return `
     <div class="rp-section">
       <h3>Skills</h3>
@@ -82,7 +85,7 @@ function skills(skills) {
 }
 
 function experience(exp) {
-  if (!exp?.length) return "";
+  if (!Array.isArray(exp) || exp.length === 0) return "";
 
   return `
     <div class="rp-section">
@@ -101,7 +104,7 @@ function experience(exp) {
 }
 
 function projects(projects) {
-  if (!projects?.length) return "";
+  if (!Array.isArray(projects) || projects.length === 0) return "";
 
   return `
     <div class="rp-section">
@@ -119,7 +122,7 @@ function projects(projects) {
 }
 
 function education(edu) {
-  if (!edu?.length) return "";
+  if (!Array.isArray(edu) || edu.length === 0) return "";
 
   return `
     <div class="rp-section">
@@ -135,17 +138,22 @@ function education(edu) {
   `;
 }
 
+// 🔥 EXTRA SECTIONS (SAFE)
 function extraSections(extra) {
-  if (!extra?.length) return "";
+  if (!Array.isArray(extra) || extra.length === 0) return "";
 
-  return extra.map(sec => `
-    <div class="rp-section">
-      <h3>${sec.title}</h3>
-      <ul>
-        ${(sec.items || []).map(i => `<li>${i}</li>`).join("")}
-      </ul>
-    </div>
-  `).join("");
+  return extra.map(sec => {
+    if (!sec || !sec.title || !Array.isArray(sec.items)) return "";
+
+    return `
+      <div class="rp-section">
+        <h3>${sec.title}</h3>
+        <ul>
+          ${sec.items.map(i => `<li>${i}</li>`).join("")}
+        </ul>
+      </div>
+    `;
+  }).join("");
 }
 
 // ==============================
@@ -192,26 +200,28 @@ async function optimizeResume() {
 
     const data = await res.json();
 
+    // 🔥 DEBUG LOGS (IMPORTANT)
+    console.log("🔥 FULL RESPONSE:", data);
+    console.log("🔥 API DATA:", data.data);
+
     resumeId = data.resume_id;
-    currentData = data.data;
+    currentData = data.data || {};
 
     isLocked = true;
 
-    // PREVIEW
     $("previewBox").innerHTML = renderResume(currentData);
 
-    // ATS SCORE (REAL LOGIC LATER)
+    // ATS SCORE
     const score = calculateATSScore(currentData, job);
 
     $("atsBox").style.display = "block";
     $("score").innerText = score;
 
     $("paymentSection").style.display = "block";
-
     $("paymentSection").scrollIntoView({ behavior: "smooth" });
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ ERROR:", err);
     $("previewBox").innerHTML = "❌ Failed to generate resume";
   } finally {
     btn.disabled = false;
@@ -220,7 +230,7 @@ async function optimizeResume() {
 }
 
 // ==============================
-// ATS SCORE (BASIC REAL LOGIC)
+// ATS SCORE
 // ==============================
 function calculateATSScore(data, job) {
   const text = JSON.stringify(data).toLowerCase();
@@ -302,7 +312,7 @@ async function payNow() {
             data.download_url;
 
         } catch (err) {
-          console.error(err);
+          console.error("❌ VERIFY ERROR:", err);
           alert("Payment succeeded but download failed");
           btn.disabled = false;
           btn.innerText = "Try Again";
@@ -315,7 +325,7 @@ async function payNow() {
     rzp.open();
 
   } catch (err) {
-    console.error(err);
+    console.error("❌ PAYMENT ERROR:", err);
     alert("Payment error");
 
     btn.disabled = false;

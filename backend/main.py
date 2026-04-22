@@ -38,18 +38,18 @@ razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # ---------------- STORAGE ----------------
 resume_store = {}
-PRICE = 100  # ₹49 in paise
+PRICE = 100  # ₹49
 
 os.makedirs("generated", exist_ok=True)
 
-# ---------------- INPUT ----------------
+# ---------------- MODELS ----------------
 class ResumeRequest(BaseModel):
     resume: str
     job_description: str
     template: str = "modern"
 
 
-# ---------------- SAFE JSON PARSER ----------------
+# ---------------- SAFE JSON ----------------
 def safe_json(text: str):
     try:
         text = text.strip()
@@ -65,7 +65,7 @@ def safe_json(text: str):
         return {}
 
 
-# ---------------- NORMALIZE (STRICT CONTROL) ----------------
+# ---------------- NORMALIZE ----------------
 def normalize(data):
     return {
         "name": data.get("name", ""),
@@ -77,42 +77,74 @@ def normalize(data):
         "experience": data.get("experience", []),
         "projects": data.get("projects", []),
         "education": data.get("education", []),
-
-        # ONLY include if exists (dynamic rendering)
         "extra_sections": data.get("extra_sections", [])
     }
 
 
-# ---------------- STRICT AI ENGINE ----------------
+# ---------------- AI ENGINE ----------------
 def generate_resume(resume_text, job_description):
 
     prompt = f"""
 You are a STRICT resume optimization engine.
 
-ABSOLUTE RULES:
-- NEVER invent information
-- NEVER add new jobs, projects, skills, or sections
-- ONLY use information present in input resume
+========================
+ABSOLUTE RULES
+========================
+- NEVER invent any information
+- NEVER add fake skills, projects, jobs
+- ONLY use data present in resume
 - You may rewrite and improve wording ONLY
-- If something is missing → leave empty
 
-SECTION RULES:
+========================
+SUMMARY RULE (MANDATORY)
+========================
+- ALWAYS generate a professional summary (3–4 lines)
+- Use ONLY existing data
+- Focus on skills, role, strengths
 
-1. EXPERIENCE:
-- You MAY expand bullet points
-- You CANNOT add new roles or companies
+========================
+EXPERIENCE RULE
+========================
+- Expand each job into 3–5 bullet points
+- Do NOT add new roles or companies
 
-2. PROJECTS:
-- You MAY improve descriptions
-- You CANNOT create new projects
+========================
+PROJECT RULE
+========================
+- Expand each project into 2–3 bullet points
+- Do NOT create new projects
 
-3. OPTIONAL SECTIONS:
-(hobbies, certifications, extracurricular, languages)
-- ONLY include if already present in resume
-- If not present → return []
+========================
+EXTRA SECTIONS RULE (CRITICAL)
+========================
+Scan resume for ANY sections not in:
+skills, experience, projects, education
 
-OUTPUT FORMAT (STRICT JSON):
+Examples:
+- hobbies
+- certifications
+- achievements
+- extracurricular
+- languages
 
+IF FOUND:
+- Extract EXACTLY
+- DO NOT modify meaning
+- DO NOT drop them
+
+Return format:
+"extra_sections": [
+  {{
+    "title": "Section Name",
+    "items": ["point1", "point2"]
+  }}
+]
+
+If none → return []
+
+========================
+OUTPUT FORMAT (STRICT JSON)
+========================
 {{
   "name": "",
   "email": "",
@@ -145,6 +177,7 @@ OUTPUT FORMAT (STRICT JSON):
   "extra_sections": []
 }}
 
+========================
 RESUME:
 {resume_text}
 
@@ -161,7 +194,7 @@ JOB DESCRIPTION:
     return safe_json(response.choices[0].message.content)
 
 
-# ---------------- OPTIMIZE ENDPOINT ----------------
+# ---------------- OPTIMIZE ----------------
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
     try:
@@ -192,7 +225,7 @@ def optimize_resume(data: ResumeRequest):
         raise HTTPException(status_code=500, detail="Processing failed")
 
 
-# ---------------- PAYMENT ----------------
+# ---------------- ORDER ----------------
 @app.post("/create-order")
 def create_order(payload: dict):
 
@@ -212,7 +245,7 @@ def create_order(payload: dict):
     return order
 
 
-# ---------------- VERIFY PAYMENT ----------------
+# ---------------- VERIFY ----------------
 @app.post("/verify-payment")
 def verify_payment(payload: dict):
 
@@ -235,7 +268,7 @@ def verify_payment(payload: dict):
     return {"download_url": f"/download/{resume_id}"}
 
 
-# ---------------- PDF GENERATION ----------------
+# ---------------- PDF ----------------
 def generate_pdf(resume_id: str):
 
     data = resume_store[resume_id]["data"]
@@ -247,11 +280,9 @@ def generate_pdf(resume_id: str):
     html = template.render(**data)
 
     file_path = f"generated/{uuid.uuid4().hex}.pdf"
-
     HTML(string=html).write_pdf(file_path)
 
     resume_store[resume_id]["file"] = file_path
-
     return file_path
 
 
