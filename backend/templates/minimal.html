@@ -6,92 +6,90 @@
 <style>
 @page {
   size: A4;
-  margin: 18mm;
+  margin: 12mm; /* REDUCED */
 }
 
 body {
   font-family: 'Segoe UI', Arial, sans-serif;
   color: #111;
-  line-height: 1.5;
-  font-size: 13px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* PREVENT BREAKS */
+.section, .job {
+  page-break-inside: avoid;
 }
 
 /* HEADER */
 .header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .name {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: 0.3px;
 }
 
 .title {
-  font-size: 14px;
+  font-size: 13px;
   color: #444;
-  margin-top: 4px;
 }
 
 .contact {
-  font-size: 12px;
+  font-size: 11px;
   color: #555;
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 /* SECTION */
 .section {
-  margin-top: 20px;
+  margin-top: 14px;
 }
 
 .section h2 {
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   border-bottom: 1px solid #ddd;
-  padding-bottom: 4px;
-  margin-bottom: 8px;
-  letter-spacing: 0.5px;
+  margin-bottom: 6px;
 }
 
 /* TEXT */
 p {
-  margin-bottom: 8px;
+  margin: 4px 0;
 }
 
 ul {
-  padding-left: 18px;
-  margin-top: 6px;
+  padding-left: 16px;
+  margin: 4px 0;
 }
 
 li {
-  margin-bottom: 5px;
+  margin-bottom: 3px;
 }
 
-/* EXPERIENCE */
+/* JOB */
 .job {
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 .job-header {
   display: flex;
   justify-content: space-between;
   font-weight: 600;
-}
-
-.company {
-  color: #333;
+  font-size: 12px;
 }
 
 .duration {
-  font-size: 11px;
+  font-size: 10px;
   color: #777;
 }
 
 /* SUMMARY */
 .summary {
-  line-height: 1.6;
-  color: #222;
+  font-size: 12px;
 }
 
 /* PRINT FIX */
@@ -100,20 +98,19 @@ li {
   print-color-adjust: exact;
 }
 </style>
+
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
-  <div class="name">{{ name or "" }}</div>
-  <div class="title">{{ title or "" }}</div>
+  <div class="name">{{ name }}</div>
+  <div class="title">{{ title }}</div>
   <div class="contact">
-    {{ email or "" }}{% if phone %} | {{ phone }}{% endif %}
+    {{ email }}{% if phone %} | {{ phone }}{% endif %}
   </div>
 </div>
 
-<!-- SUMMARY -->
 {% if summary %}
 <div class="section">
   <h2>Profile</h2>
@@ -121,7 +118,6 @@ li {
 </div>
 {% endif %}
 
-<!-- SKILLS -->
 {% if skills %}
 <div class="section">
   <h2>Skills</h2>
@@ -129,18 +125,14 @@ li {
   {% for s in skills %}
     {% if s is string %}
       <p>{{ s }}</p>
-    {% elif s is mapping and s.get("name") %}
-      <p>
-        <strong>{{ s.get("name") }}:</strong>
-        {{ s.get("details", []) | join(", ") }}
-      </p>
+    {% elif s.name %}
+      <p><strong>{{ s.name }}:</strong> {{ s.details | join(", ") }}</p>
     {% endif %}
   {% endfor %}
 
 </div>
 {% endif %}
 
-<!-- EXPERIENCE -->
 {% if experience %}
 <div class="section">
   <h2>Experience</h2>
@@ -148,16 +140,13 @@ li {
   {% for exp in experience %}
   <div class="job">
     <div class="job-header">
-      <div>
-        {{ exp.get("role", "") }} — 
-        <span class="company">{{ exp.get("company", "") }}</span>
-      </div>
-      <div class="duration">{{ exp.get("duration", "") }}</div>
+      <div>{{ exp.role }} — {{ exp.company }}</div>
+      <div class="duration">{{ exp.duration }}</div>
     </div>
 
-    {% if exp.get("points") %}
+    {% if exp.points %}
     <ul>
-      {% for p in exp.get("points", []) %}
+      {% for p in exp.points %}
       <li>{{ p }}</li>
       {% endfor %}
     </ul>
@@ -167,22 +156,21 @@ li {
 </div>
 {% endif %}
 
-<!-- PROJECTS -->
 {% if projects %}
 <div class="section">
   <h2>Projects</h2>
 
   {% for p in projects %}
   <div class="job">
-    <strong>{{ p.get("name", "") }}</strong>
+    <strong>{{ p.name }}</strong>
 
-    {% if p.get("description") %}
-    <p>{{ p.get("description") }}</p>
+    {% if p.description %}
+    <p>{{ p.description }}</p>
     {% endif %}
 
-    {% if p.get("points") %}
+    {% if p.points %}
     <ul>
-      {% for point in p.get("points", []) %}
+      {% for point in p.points %}
       <li>{{ point }}</li>
       {% endfor %}
     </ul>
@@ -192,29 +180,27 @@ li {
 </div>
 {% endif %}
 
-<!-- EDUCATION -->
 {% if education %}
 <div class="section">
   <h2>Education</h2>
 
   {% for e in education %}
   <p>
-    <strong>{{ e.get("degree", "") }}</strong><br>
-    {{ e.get("institution", "") }}<br>
-    <small>{{ e.get("year", "") }}</small>
+    <strong>{{ e.degree }}</strong><br>
+    {{ e.institution }}<br>
+    <small>{{ e.year }}</small>
   </p>
   {% endfor %}
 </div>
 {% endif %}
 
-<!-- EXTRA SECTIONS -->
 {% if extra_sections %}
   {% for sec in extra_sections %}
-    {% if sec is mapping and sec.get("items") %}
+    {% if sec["items"] %}
     <div class="section">
-      <h2>{{ sec.get("title", "") }}</h2>
+      <h2>{{ sec.title }}</h2>
       <ul>
-        {% for item in sec.get("items", []) %}
+        {% for item in sec["items"] %}
         <li>{{ item }}</li>
         {% endfor %}
       </ul>
