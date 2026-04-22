@@ -128,9 +128,9 @@ li {
 
 <!-- HEADER -->
 <div class="header">
-  <div class="name">{{ name | default('') }}</div>
+  <div class="name">{{ name or "" }}</div>
   <div class="contact">
-    {{ email | default('') }}{% if phone %} | {{ phone }}{% endif %}
+    {{ email or "" }}{% if phone %} | {{ phone }}{% endif %}
   </div>
 </div>
 
@@ -139,16 +139,21 @@ li {
   <!-- LEFT -->
   <div class="left">
 
-    <!-- SKILLS (SAFE FOR STRING OR OBJECT) -->
+    <!-- SKILLS -->
     {% if skills %}
     <div class="section">
       <h2>Skills</h2>
       <ul>
-        {% for s in skills | default([]) %}
+        {% for s in skills %}
           {% if s is string %}
             <li>{{ s }}</li>
-          {% elif s.name %}
-            <li>{{ s.name }}{% if s.details %} — {{ s.details | join(", ") }}{% endif %}</li>
+          {% elif s is mapping and s.get("name") %}
+            <li>
+              {{ s.get("name") }}
+              {% if s.get("details") %}
+                — {{ s.get("details", []) | join(", ") }}
+              {% endif %}
+            </li>
           {% endif %}
         {% endfor %}
       </ul>
@@ -159,25 +164,24 @@ li {
     {% if education %}
     <div class="section">
       <h2>Education</h2>
-      {% for e in education | default([]) %}
+      {% for e in education %}
       <p style="font-size:12px; margin-bottom:8px;">
-        <strong>{{ e.degree | default('') }}</strong><br>
-        {{ e.institution | default('') }}<br>
-        <small>{{ e.year | default('') }}</small>
+        <strong>{{ e.get("degree", "") }}</strong><br>
+        {{ e.get("institution", "") }}<br>
+        <small>{{ e.get("year", "") }}</small>
       </p>
       {% endfor %}
     </div>
     {% endif %}
 
-    <!-- EXTRA SECTIONS (SAFE FIX) -->
+    <!-- EXTRA SECTIONS -->
     {% if extra_sections %}
-      {% for sec in extra_sections | default([]) %}
-        {% set items = sec.items if sec.items is defined else sec["items"] if sec["items"] is defined else [] %}
-        {% if items %}
+      {% for sec in extra_sections %}
+        {% if sec is mapping and sec.get("items") %}
         <div class="section">
-          <h2>{{ sec.title | default('') }}</h2>
+          <h2>{{ sec.get("title", "") }}</h2>
           <ul>
-            {% for item in items %}
+            {% for item in sec.get("items", []) %}
             <li>{{ item }}</li>
             {% endfor %}
           </ul>
@@ -204,16 +208,16 @@ li {
     <div class="section">
       <h2>Experience</h2>
 
-      {% for exp in experience | default([]) %}
+      {% for exp in experience %}
       <div class="card">
-        <div class="role">{{ exp.role | default('') }}</div>
+        <div class="role">{{ exp.get("role", "") }}</div>
         <div class="company">
-          {{ exp.company | default('') }} • {{ exp.duration | default('') }}
+          {{ exp.get("company", "") }} • {{ exp.get("duration", "") }}
         </div>
 
-        {% if exp.points %}
+        {% if exp.get("points") %}
         <ul>
-          {% for p in exp.points | default([]) %}
+          {% for p in exp.get("points", []) %}
           <li>{{ p }}</li>
           {% endfor %}
         </ul>
@@ -228,17 +232,17 @@ li {
     <div class="section">
       <h2>Projects</h2>
 
-      {% for p in projects | default([]) %}
+      {% for p in projects %}
       <div class="card">
-        <div class="role">{{ p.name | default('') }}</div>
+        <div class="role">{{ p.get("name", "") }}</div>
 
-        {% if p.description %}
-        <p class="summary">{{ p.description }}</p>
+        {% if p.get("description") %}
+        <p class="summary">{{ p.get("description") }}</p>
         {% endif %}
 
-        {% if p.points %}
+        {% if p.get("points") %}
         <ul>
-          {% for point in p.points | default([]) %}
+          {% for point in p.get("points", []) %}
           <li>{{ point }}</li>
           {% endfor %}
         </ul>

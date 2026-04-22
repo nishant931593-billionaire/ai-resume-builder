@@ -61,57 +61,88 @@ def safe_json(text: str):
         print("❌ JSON ERROR:", e)
         return {}
 
-# ---------------- NORMALIZE ----------------
+# ---------------- NORMALIZE (CRITICAL FIX) ----------------
 def normalize(data):
 
+    def safe_list(x):
+        return x if isinstance(x, list) else []
+
+    def safe_str(x):
+        return str(x) if x else ""
+
+    # -------- EXPERIENCE --------
     def fix_experience(exp_list):
         fixed = []
-        for e in exp_list or []:
+        for e in safe_list(exp_list):
             fixed.append({
-                "role": e.get("role") or e.get("title") or "",
-                "company": e.get("company", ""),
-                "duration": e.get("duration") or e.get("dates") or "",
-                "points": e.get("points") or e.get("responsibilities") or []
+                "role": safe_str(e.get("role") or e.get("title")),
+                "company": safe_str(e.get("company")),
+                "duration": safe_str(e.get("duration") or e.get("dates")),
+                "points": safe_list(e.get("points") or e.get("responsibilities"))
             })
         return fixed
 
+    # -------- PROJECTS --------
     def fix_projects(proj_list):
         fixed = []
-        for p in proj_list or []:
+        for p in safe_list(proj_list):
             fixed.append({
-                "name": p.get("name") or p.get("title") or "",
-                "description": p.get("description", ""),
-                "points": p.get("points") or []
+                "name": safe_str(p.get("name") or p.get("title")),
+                "description": safe_str(p.get("description")),
+                "points": safe_list(p.get("points"))
             })
         return fixed
 
-    # FIX extra_sections structure
-    fixed_extra = []
-    raw_extra = data.get("extra_sections", [])
+    # -------- SKILLS FIX (IMPORTANT) --------
+    def fix_skills(skills):
+        fixed = []
+        for s in safe_list(skills):
+            if isinstance(s, str):
+                fixed.append(s)
+            elif isinstance(s, dict):
+                name = s.get("name")
+                details = s.get("details", [])
+                if name:
+                    if details:
+                        fixed.append(f"{name}: {', '.join(details)}")
+                    else:
+                        fixed.append(name)
+        return fixed
 
-    if isinstance(raw_extra, list):
-        for sec in raw_extra:
+    # -------- EXTRA SECTIONS FIX --------
+    def fix_extra(raw_extra):
+        fixed = []
+        for sec in safe_list(raw_extra):
+
+            # already correct
             if isinstance(sec, dict) and "title" in sec and "items" in sec:
-                fixed_extra.append(sec)
+                fixed.append({
+                    "title": safe_str(sec.get("title")),
+                    "items": safe_list(sec.get("items"))
+                })
+
+            # convert wrong format
             elif isinstance(sec, dict):
                 for key, value in sec.items():
-                    fixed_extra.append({
-                        "title": key.capitalize(),
-                        "items": value if isinstance(value, list) else []
+                    fixed.append({
+                        "title": safe_str(key).capitalize(),
+                        "items": safe_list(value)
                     })
 
-    return {
-        "name": str(data.get("name", "")),
-        "email": str(data.get("email", "")),
-        "phone": str(data.get("phone", "")),
-        "title": str(data.get("title", "")),
-        "summary": str(data.get("summary", "")),
+        return fixed
 
-        "skills": data.get("skills", []) if isinstance(data.get("skills"), list) else [],
+    return {
+        "name": safe_str(data.get("name")),
+        "email": safe_str(data.get("email")),
+        "phone": safe_str(data.get("phone")),
+        "title": safe_str(data.get("title")),
+        "summary": safe_str(data.get("summary")),
+
+        "skills": fix_skills(data.get("skills")),
         "experience": fix_experience(data.get("experience")),
         "projects": fix_projects(data.get("projects")),
-        "education": data.get("education", []) if isinstance(data.get("education"), list) else [],
-        "extra_sections": fixed_extra
+        "education": safe_list(data.get("education")),
+        "extra_sections": fix_extra(data.get("extra_sections")),
     }
 
 # ---------------- AI ENGINE ----------------
@@ -120,17 +151,12 @@ def generate_resume(resume_text, job_description):
     prompt = f"""
 You are a STRICT resume optimization engine.
 
-CORE RULES:
-- NEVER invent fake data
-- ONLY use provided information
-- You MAY rewrite and enhance content professionally
-- ALWAYS return valid JSON
-
-SMART ENHANCEMENT:
-
-- Improve summary professionally
-- If projects are missing → create practice-based projects
-- If experience is missing → describe learning, NOT fake jobs
+RULES:
+- NEVER invent fake experience
+- ONLY enhance given data
+- If missing experience → describe learning, not fake jobs
+- If missing projects → create realistic practice projects
+- Always return clean JSON
 
 STRUCTURE:
 experience = role, company, duration, points[]

@@ -169,15 +169,18 @@ body {
   </div>
 
   <!-- SKILLS -->
-  {% if skills and skills|length > 0 %}
+  {% if skills %}
   <div class="section">
     <h2>Skills</h2>
     <ul>
       {% for s in skills %}
         {% if s is string %}
           <li>{{ s }}</li>
-        {% elif s.name %}
-          <li><strong>{{ s.name }}:</strong> {{ s.details | join(", ") }}</li>
+        {% elif s is mapping and s.get("name") %}
+          <li>
+            <strong>{{ s.get("name") }}:</strong>
+            {{ s.get("details", []) | join(", ") }}
+          </li>
         {% endif %}
       {% endfor %}
     </ul>
@@ -185,27 +188,27 @@ body {
   {% endif %}
 
   <!-- EDUCATION -->
-  {% if education and education|length > 0 %}
+  {% if education %}
   <div class="section">
     <h2>Education</h2>
     {% for e in education %}
     <p style="font-size:12px; margin-bottom:8px;">
-      <strong>{{ e.degree or "" }}</strong><br>
-      {{ e.institution or "" }}<br>
-      <small>{{ e.year or "" }}</small>
+      <strong>{{ e.get("degree", "") }}</strong><br>
+      {{ e.get("institution", "") }}<br>
+      <small>{{ e.get("year", "") }}</small>
     </p>
     {% endfor %}
   </div>
   {% endif %}
 
   <!-- EXTRA SECTIONS -->
-  {% if extra_sections and extra_sections|length > 0 %}
+  {% if extra_sections %}
     {% for sec in extra_sections %}
-      {% if sec["items"] and sec["items"]|length > 0 %}
+      {% if sec is mapping and sec.get("items") %}
       <div class="section">
-        <h2>{{ sec.title or "" }}</h2>
+        <h2>{{ sec.get("title", "") }}</h2>
         <ul>
-          {% for item in sec["items"] %}
+          {% for item in sec.get("items", []) %}
           <li>{{ item }}</li>
           {% endfor %}
         </ul>
@@ -233,7 +236,7 @@ body {
   {% endif %}
 
   <!-- EXPERIENCE -->
-  {% if experience and experience|length > 0 %}
+  {% if experience %}
   <div class="block">
     <h2>Experience</h2>
 
@@ -241,15 +244,15 @@ body {
     <div class="job">
       <div class="job-header">
         <div>
-          {{ exp.role or "" }} —
-          <span class="company">{{ exp.company or "" }}</span>
+          {{ exp.get("role", "") }} —
+          <span class="company">{{ exp.get("company", "") }}</span>
         </div>
-        <div class="duration">{{ exp.duration or "" }}</div>
+        <div class="duration">{{ exp.get("duration", "") }}</div>
       </div>
 
-      {% if exp.points and exp.points|length > 0 %}
+      {% if exp.get("points") %}
       <ul class="points">
-        {% for p in exp.points %}
+        {% for p in exp.get("points", []) %}
         <li>{{ p }}</li>
         {% endfor %}
       </ul>
@@ -260,21 +263,21 @@ body {
   {% endif %}
 
   <!-- PROJECTS -->
-  {% if projects and projects|length > 0 %}
+  {% if projects %}
   <div class="block">
     <h2>Projects</h2>
 
     {% for p in projects %}
     <div class="job">
-      <strong>{{ p.name or "" }}</strong>
+      <strong>{{ p.get("name", "") }}</strong>
 
-      {% if p.description %}
-      <div class="summary">{{ p.description }}</div>
+      {% if p.get("description") %}
+      <div class="summary">{{ p.get("description") }}</div>
       {% endif %}
 
-      {% if p.points and p.points|length > 0 %}
+      {% if p.get("points") %}
       <ul class="points">
-        {% for point in p.points %}
+        {% for point in p.get("points", []) %}
         <li>{{ point }}</li>
         {% endfor %}
       </ul>
