@@ -49,6 +49,13 @@ class ResumeRequest(BaseModel):
     template: str = "modern"
 
 
+# ---------------- SAFE HELPERS ----------------
+def force_list(x):
+    return x if isinstance(x, list) else []
+
+def force_str(x):
+    return str(x) if x else ""
+
 # ---------------- SAFE JSON ----------------
 def safe_json(text: str):
     try:
@@ -61,23 +68,25 @@ def safe_json(text: str):
         end = text.rfind("}")
 
         return json.loads(text[start:end + 1])
-    except:
+    except Exception as e:
+        print("JSON ERROR:", e)
         return {}
 
 
-# ---------------- NORMALIZE ----------------
+# ---------------- NORMALIZE (CRITICAL FIX) ----------------
 def normalize(data):
     return {
-        "name": data.get("name", ""),
-        "email": data.get("email", ""),
-        "phone": data.get("phone", ""),
-        "title": data.get("title", ""),
-        "summary": data.get("summary", ""),
-        "skills": data.get("skills", []),
-        "experience": data.get("experience", []),
-        "projects": data.get("projects", []),
-        "education": data.get("education", []),
-        "extra_sections": data.get("extra_sections", [])
+        "name": force_str(data.get("name")),
+        "email": force_str(data.get("email")),
+        "phone": force_str(data.get("phone")),
+        "title": force_str(data.get("title")),
+        "summary": force_str(data.get("summary")),
+
+        "skills": force_list(data.get("skills")),
+        "experience": force_list(data.get("experience")),
+        "projects": force_list(data.get("projects")),
+        "education": force_list(data.get("education")),
+        "extra_sections": force_list(data.get("extra_sections")),
     }
 
 
@@ -87,64 +96,16 @@ def generate_resume(resume_text, job_description):
     prompt = f"""
 You are a STRICT resume optimization engine.
 
-========================
-ABSOLUTE RULES
-========================
-- NEVER invent any information
-- NEVER add fake skills, projects, jobs
-- ONLY use data present in resume
-- You may rewrite and improve wording ONLY
+RULES:
+- NEVER invent data
+- ONLY rewrite existing content
+- ALWAYS return valid JSON
 
-========================
-SUMMARY RULE (MANDATORY)
-========================
-- ALWAYS generate a professional summary (3–4 lines)
-- Use ONLY existing data
-- Focus on skills, role, strengths
+IMPORTANT:
+- summary MUST exist (3–4 lines)
+- extra sections MUST be extracted if present
 
-========================
-EXPERIENCE RULE
-========================
-- Expand each job into 3–5 bullet points
-- Do NOT add new roles or companies
-
-========================
-PROJECT RULE
-========================
-- Expand each project into 2–3 bullet points
-- Do NOT create new projects
-
-========================
-EXTRA SECTIONS RULE (CRITICAL)
-========================
-Scan resume for ANY sections not in:
-skills, experience, projects, education
-
-Examples:
-- hobbies
-- certifications
-- achievements
-- extracurricular
-- languages
-
-IF FOUND:
-- Extract EXACTLY
-- DO NOT modify meaning
-- DO NOT drop them
-
-Return format:
-"extra_sections": [
-  {{
-    "title": "Section Name",
-    "items": ["point1", "point2"]
-  }}
-]
-
-If none → return []
-
-========================
-OUTPUT FORMAT (STRICT JSON)
-========================
+OUTPUT:
 {{
   "name": "",
   "email": "",
@@ -152,32 +113,12 @@ OUTPUT FORMAT (STRICT JSON)
   "title": "",
   "summary": "",
   "skills": [],
-  "experience": [
-    {{
-      "role": "",
-      "company": "",
-      "duration": "",
-      "points": []
-    }}
-  ],
-  "projects": [
-    {{
-      "name": "",
-      "description": "",
-      "points": []
-    }}
-  ],
-  "education": [
-    {{
-      "degree": "",
-      "institution": "",
-      "year": ""
-    }}
-  ],
+  "experience": [],
+  "projects": [],
+  "education": [],
   "extra_sections": []
 }}
 
-========================
 RESUME:
 {resume_text}
 
@@ -203,6 +144,9 @@ def optimize_resume(data: ResumeRequest):
 
         raw = generate_resume(data.resume, data.job_description)
         result = normalize(raw)
+
+        # 🔥 DEBUG LOG
+        print("FINAL DATA:", result)
 
         resume_id = str(uuid.uuid4())
 
@@ -268,22 +212,28 @@ def verify_payment(payload: dict):
     return {"download_url": f"/download/{resume_id}"}
 
 
-# ---------------- PDF ----------------
+# ---------------- PDF GENERATION (SAFE) ----------------
 def generate_pdf(resume_id: str):
 
     data = resume_store[resume_id]["data"]
     template_name = resume_store[resume_id]["template"]
 
-    with open(f"templates/{template_name}.html", "r", encoding="utf-8") as f:
-        template = Template(f.read())
+    try:
+        with open(f"templates/{template_name}.html", "r", encoding="utf-8") as f:
+            template = Template(f.read())
 
-    html = template.render(**data)
+        html = template.render(**data)
 
-    file_path = f"generated/{uuid.uuid4().hex}.pdf"
-    HTML(string=html).write_pdf(file_path)
+        file_path = f"generated/{uuid.uuid4().hex}.pdf"
+        HTML(string=html).write_pdf(file_path)
 
-    resume_store[resume_id]["file"] = file_path
-    return file_path
+        resume_store[resume_id]["file"] = file_path
+
+        return file_path
+
+    except Exception as e:
+        print("PDF ERROR:", e)
+        raise HTTPException(status_code=500, detail="PDF generation failed")
 
 
 # ---------------- DOWNLOAD ----------------

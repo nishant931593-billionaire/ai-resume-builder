@@ -13,58 +13,46 @@ body {
   font-family: 'Segoe UI', 'Inter', sans-serif;
   margin: 0;
   color: #111827;
-  background: #fff;
 }
 
-/* =========================
-   HEADER (PREMIUM HERO STYLE)
-========================= */
+/* HEADER */
 .header {
   background: linear-gradient(135deg, #6d28d9, #2563eb);
   color: white;
-  padding: 45px 55px 35px 55px;
+  padding: 45px 55px 35px;
 }
 
 .name {
-  font-size: 36px;
+  font-size: 34px;
   font-weight: 800;
-  letter-spacing: 0.5px;
 }
 
 .contact {
   font-size: 13px;
-  opacity: 0.9;
   margin-top: 6px;
+  opacity: 0.9;
 }
 
-/* =========================
-   LAYOUT
-========================= */
+/* LAYOUT */
 .container {
   display: flex;
-  min-height: 100vh;
 }
 
-/* =========================
-   LEFT PANEL
-========================= */
+/* LEFT PANEL */
 .left {
   width: 30%;
   background: #f9fafb;
-  padding: 32px;
+  padding: 30px;
   border-right: 1px solid #e5e7eb;
 }
 
-/* LEFT HEADINGS */
 .left h2 {
   font-size: 11px;
-  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #6b7280;
   margin-bottom: 10px;
 }
 
-/* LEFT LIST */
 .left ul {
   padding-left: 16px;
 }
@@ -72,94 +60,77 @@ body {
 .left li {
   font-size: 12px;
   margin-bottom: 6px;
-  color: #111827;
-  line-height: 1.4;
 }
 
-/* =========================
-   RIGHT PANEL
-========================= */
+/* RIGHT PANEL */
 .right {
   width: 70%;
-  padding: 35px 45px;
+  padding: 30px 40px;
 }
 
-/* SECTION HEADER */
+/* SECTION */
 .section {
-  margin-bottom: 26px;
+  margin-bottom: 25px;
 }
 
 .section h2 {
   font-size: 13px;
-  letter-spacing: 1px;
   text-transform: uppercase;
   color: #6d28d9;
   border-bottom: 2px solid #ede9fe;
-  padding-bottom: 6px;
-  margin-bottom: 14px;
+  padding-bottom: 5px;
+  margin-bottom: 12px;
 }
 
-/* =========================
-   EXPERIENCE / CARDS
-========================= */
+/* CARD */
 .card {
-  margin-bottom: 18px;
-  padding-left: 4px;
+  margin-bottom: 16px;
 }
 
 .role {
   font-size: 14px;
   font-weight: 700;
-  color: #111827;
 }
 
 .company {
   font-size: 12px;
   color: #6b7280;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
-/* BULLETS */
+/* TEXT */
 ul {
   padding-left: 18px;
 }
 
 li {
   font-size: 12.5px;
-  margin-bottom: 6px;
-  line-height: 1.5;
-  color: #1f2937;
+  margin-bottom: 5px;
 }
 
-/* =========================
-   PROJECTS EMPHASIS
-========================= */
-.card .role {
-  color: #2563eb;
+/* SUMMARY */
+.summary {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #374151;
 }
 
-/* =========================
-   SUBTLE DESIGN ENHANCEMENTS
-========================= */
-.section:hover {
-  transition: 0.2s ease;
-}
-
-/* PRINT SAFE */
+/* PRINT FIX */
 * {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
 </style>
-
 </head>
 
 <body>
 
 <!-- HEADER -->
 <div class="header">
-  <div class="name">{{name}}</div>
-  <div class="contact">{{email}} | {{phone}}</div>
+  <div class="name">{{ name or "" }}</div>
+  <div class="contact">
+    {{ email or "" }}{% if phone %} | {{ phone }}{% endif %}
+  </div>
 </div>
 
 <div class="container">
@@ -168,62 +139,104 @@ li {
   <div class="left">
 
     <!-- SKILLS -->
+    {% if skills and skills|length > 0 %}
     <div class="section">
       <h2>Skills</h2>
       <ul>
         {% for s in skills %}
-        <li>{{s}}</li>
+        <li>{{ s }}</li>
         {% endfor %}
       </ul>
     </div>
+    {% endif %}
 
     <!-- EDUCATION -->
+    {% if education and education|length > 0 %}
     <div class="section">
       <h2>Education</h2>
       {% for e in education %}
-      <p style="font-size:12px; margin-bottom:10px;">
-        {{e}}
+      <p style="font-size:12px; margin-bottom:8px;">
+        <strong>{{ e.degree or "" }}</strong><br>
+        {{ e.institution or "" }}<br>
+        <small>{{ e.year or "" }}</small>
       </p>
       {% endfor %}
     </div>
+    {% endif %}
+
+    <!-- EXTRA SECTIONS -->
+    {% if extra_sections and extra_sections|length > 0 %}
+      {% for sec in extra_sections %}
+        {% if sec.items and sec.items|length > 0 %}
+        <div class="section">
+          <h2>{{ sec.title }}</h2>
+          <ul>
+            {% for item in sec.items %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+      {% endfor %}
+    {% endif %}
 
   </div>
 
   <!-- RIGHT -->
   <div class="right">
 
+    <!-- PROFILE -->
+    {% if summary %}
+    <div class="section">
+      <h2>Profile</h2>
+      <p class="summary">{{ summary }}</p>
+    </div>
+    {% endif %}
+
     <!-- EXPERIENCE -->
+    {% if experience and experience|length > 0 %}
     <div class="section">
       <h2>Experience</h2>
 
       {% for exp in experience %}
       <div class="card">
-        <div class="role">{{exp.role}}</div>
-        <div class="company">{{exp.company}} • {{exp.duration}}</div>
+        <div class="role">{{ exp.role or "" }}</div>
+        <div class="company">
+          {{ exp.company or "" }} • {{ exp.duration or "" }}
+        </div>
 
+        {% if exp.points and exp.points|length > 0 %}
         <ul>
           {% for p in exp.points %}
-          <li>{{p}}</li>
+          <li>{{ p }}</li>
           {% endfor %}
         </ul>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
+    {% endif %}
 
     <!-- PROJECTS -->
-    {% if projects %}
+    {% if projects and projects|length > 0 %}
     <div class="section">
       <h2>Projects</h2>
 
       {% for p in projects %}
       <div class="card">
-        <div class="role">{{p.name}}</div>
+        <div class="role">{{ p.name or "" }}</div>
 
+        {% if p.description %}
+        <p class="summary">{{ p.description }}</p>
+        {% endif %}
+
+        {% if p.points and p.points|length > 0 %}
         <ul>
           {% for point in p.points %}
-          <li>{{point}}</li>
+          <li>{{ point }}</li>
           {% endfor %}
         </ul>
+        {% endif %}
       </div>
       {% endfor %}
     </div>

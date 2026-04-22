@@ -16,9 +16,7 @@ body {
   font-size: 13px;
 }
 
-/* ======================
-   HEADER
-====================== */
+/* HEADER */
 .header {
   text-align: center;
   margin-bottom: 22px;
@@ -27,7 +25,6 @@ body {
 .name {
   font-size: 24px;
   font-weight: 700;
-  letter-spacing: 0.3px;
 }
 
 .title {
@@ -42,9 +39,7 @@ body {
   margin-top: 8px;
 }
 
-/* ======================
-   SECTION
-====================== */
+/* SECTION */
 .section {
   margin-top: 22px;
 }
@@ -52,20 +47,14 @@ body {
 .section h2 {
   font-size: 12px;
   text-transform: uppercase;
-  letter-spacing: 1px;
   border-bottom: 1px solid #ddd;
   padding-bottom: 4px;
   margin-bottom: 10px;
-  color: #111;
 }
 
-/* ======================
-   TEXT
-====================== */
+/* TEXT */
 p {
-  font-size: 13px;
   margin-bottom: 8px;
-  color: #222;
 }
 
 ul {
@@ -74,14 +63,10 @@ ul {
 }
 
 li {
-  font-size: 13px;
   margin-bottom: 5px;
-  color: #222;
 }
 
-/* ======================
-   EXPERIENCE
-====================== */
+/* EXPERIENCE */
 .job {
   margin-bottom: 14px;
 }
@@ -90,7 +75,6 @@ li {
   display: flex;
   justify-content: space-between;
   font-weight: 600;
-  font-size: 13px;
 }
 
 .company {
@@ -102,62 +86,48 @@ li {
   color: #777;
 }
 
-/* ======================
-   PROJECTS
-====================== */
-.job strong {
-  font-size: 13px;
-  display: block;
-  margin-bottom: 4px;
-}
-
-/* ======================
-   SUMMARY
-====================== */
+/* SUMMARY */
 .summary {
-  font-size: 13px;
-  color: #222;
   line-height: 1.6;
 }
 
-/* ======================
-   PRINT SAFETY
-====================== */
+/* PRINT FIX */
 * {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
 </style>
-
 </head>
 
 <body>
 
 <!-- HEADER -->
 <div class="header">
-  <div class="name">{{name}}</div>
-  <div class="title">{{title}}</div>
-  <div class="contact">{{email}} | {{phone}}</div>
+  <div class="name">{{ name or "" }}</div>
+  <div class="title">{{ title or "" }}</div>
+  <div class="contact">
+    {{ email or "" }}{% if phone %} | {{ phone }}{% endif %}
+  </div>
 </div>
 
 <!-- SUMMARY -->
 {% if summary %}
 <div class="section">
-  <h2>Summary</h2>
-  <p class="summary">{{summary}}</p>
+  <h2>Profile</h2>
+  <p class="summary">{{ summary }}</p>
 </div>
 {% endif %}
 
 <!-- SKILLS -->
-{% if skills %}
+{% if skills and skills|length > 0 %}
 <div class="section">
   <h2>Skills</h2>
-  <p>{{skills | join(", ")}}</p>
+  <p>{{ skills | join(", ") }}</p>
 </div>
 {% endif %}
 
 <!-- EXPERIENCE -->
-{% if experience %}
+{% if experience and experience|length > 0 %}
 <div class="section">
   <h2>Experience</h2>
 
@@ -165,57 +135,78 @@ li {
   <div class="job">
     <div class="job-header">
       <div>
-        {{exp.role}} — <span class="company">{{exp.company}}</span>
+        {{ exp.role or "" }} — 
+        <span class="company">{{ exp.company or "" }}</span>
       </div>
-      <div class="duration">{{exp.duration}}</div>
+      <div class="duration">{{ exp.duration or "" }}</div>
     </div>
 
+    {% if exp.points and exp.points|length > 0 %}
     <ul>
       {% for p in exp.points %}
-      <li>{{p}}</li>
+      <li>{{ p }}</li>
       {% endfor %}
     </ul>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
 {% endif %}
 
 <!-- PROJECTS -->
-{% if projects %}
+{% if projects and projects|length > 0 %}
 <div class="section">
   <h2>Projects</h2>
 
   {% for p in projects %}
   <div class="job">
-    <strong>{{p.name}}</strong>
+    <strong>{{ p.name or "" }}</strong>
 
     {% if p.description %}
-    <p>{{p.description}}</p>
+    <p>{{ p.description }}</p>
     {% endif %}
 
+    {% if p.points and p.points|length > 0 %}
     <ul>
       {% for point in p.points %}
-      <li>{{point}}</li>
+      <li>{{ point }}</li>
       {% endfor %}
     </ul>
+    {% endif %}
   </div>
   {% endfor %}
 </div>
 {% endif %}
 
 <!-- EDUCATION -->
-{% if education %}
+{% if education and education|length > 0 %}
 <div class="section">
   <h2>Education</h2>
 
   {% for e in education %}
   <p>
-    <strong>{{e.degree}}</strong><br>
-    {{e.institution}}<br>
-    <small>{{e.year}}</small>
+    <strong>{{ e.degree or "" }}</strong><br>
+    {{ e.institution or "" }}<br>
+    <small>{{ e.year or "" }}</small>
   </p>
   {% endfor %}
 </div>
+{% endif %}
+
+<!-- EXTRA SECTIONS (FIXED CRITICAL BUG) -->
+{% if extra_sections and extra_sections|length > 0 %}
+  {% for sec in extra_sections %}
+    {% if sec.items and sec.items|length > 0 %}
+    <div class="section">
+      <h2>{{ sec.title }}</h2>
+      <ul>
+        {% for item in sec.items %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  {% endfor %}
 {% endif %}
 
 </body>

@@ -25,9 +25,7 @@ body {
   min-height: 100vh;
 }
 
-/* =========================
-   LEFT PANEL
-========================= */
+/* LEFT */
 .left {
   width: 32%;
   background: #0f172a;
@@ -38,7 +36,6 @@ body {
 .name {
   font-size: 26px;
   font-weight: 700;
-  letter-spacing: 0.5px;
 }
 
 .title-left {
@@ -50,12 +47,10 @@ body {
 
 .contact {
   font-size: 12px;
-  color: #e2e8f0;
   line-height: 1.6;
   margin-bottom: 25px;
 }
 
-/* LEFT SECTIONS */
 .section {
   margin-top: 22px;
 }
@@ -63,7 +58,6 @@ body {
 .section h2 {
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
   color: #94a3b8;
   border-bottom: 1px solid rgba(255,255,255,0.15);
   padding-bottom: 6px;
@@ -73,30 +67,23 @@ body {
 .section li {
   font-size: 12px;
   margin-bottom: 6px;
-  color: #e2e8f0;
-  line-height: 1.4;
 }
 
-/* =========================
-   RIGHT PANEL
-========================= */
+/* RIGHT */
 .right {
   width: 68%;
   padding: 42px;
 }
 
-/* HEADER */
 .header-name {
   font-size: 30px;
   font-weight: 700;
-  color: #0f172a;
 }
 
 .header-title {
   font-size: 14px;
   color: #4f46e5;
   margin-top: 4px;
-  font-weight: 500;
 }
 
 .divider {
@@ -105,35 +92,24 @@ body {
   margin: 16px 0 28px;
 }
 
-/* =========================
-   BLOCKS
-========================= */
+/* BLOCK */
 .block {
   margin-bottom: 26px;
 }
 
 .block h2 {
   font-size: 13px;
-  letter-spacing: 1px;
   text-transform: uppercase;
-  color: #0f172a;
   border-bottom: 2px solid #e5e7eb;
   padding-bottom: 6px;
   margin-bottom: 12px;
 }
 
-/* =========================
-   SUMMARY
-========================= */
 .summary {
   font-size: 13px;
-  line-height: 1.7;
-  color: #374151;
+  line-height: 1.6;
 }
 
-/* =========================
-   EXPERIENCE / JOBS
-========================= */
 .job {
   margin-bottom: 18px;
 }
@@ -143,7 +119,6 @@ body {
   justify-content: space-between;
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
 }
 
 .company {
@@ -161,37 +136,15 @@ body {
 }
 
 .points li {
-  font-size: 12.5px;
+  font-size: 12px;
   margin-bottom: 6px;
-  color: #374151;
-  line-height: 1.5;
 }
 
-/* =========================
-   PROJECTS
-========================= */
-.job strong {
-  font-size: 13px;
-  color: #111827;
-}
-
-/* =========================
-   PRINT OPTIMIZATION
-========================= */
+/* PRINT */
 * {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
-
-/* =========================
-   RESPONSIVE SAFETY (PDF)
-========================= */
-@media print {
-  .container {
-    page-break-inside: avoid;
-  }
-}
-
 </style>
 </head>
 
@@ -202,12 +155,12 @@ body {
 <!-- LEFT -->
 <div class="left">
 
-  <div class="name">{{name}}</div>
-  <div class="title-left">{{title}}</div>
+  <div class="name">{{ name | default('') }}</div>
+  <div class="title-left">{{ title | default('') }}</div>
 
   <div class="contact">
-    {{email}}<br>
-    {{phone}}
+    {{ email | default('') }}<br>
+    {{ phone | default('') }}
   </div>
 
   <!-- SKILLS -->
@@ -215,8 +168,8 @@ body {
   <div class="section">
     <h2>Skills</h2>
     <ul>
-      {% for s in skills %}
-      <li>{{s}}</li>
+      {% for s in skills | default([]) %}
+      <li>{{ s }}</li>
       {% endfor %}
     </ul>
   </div>
@@ -226,24 +179,24 @@ body {
   {% if education %}
   <div class="section">
     <h2>Education</h2>
-    {% for e in education %}
+    {% for e in education | default([]) %}
     <p>
-      <strong>{{e.degree}}</strong><br>
-      {{e.institution}}<br>
-      <small>{{e.year}}</small>
+      <strong>{{ e.degree | default('') }}</strong><br>
+      {{ e.institution | default('') }}<br>
+      <small>{{ e.year | default('') }}</small>
     </p>
     {% endfor %}
   </div>
   {% endif %}
 
-  <!-- EXTRA SECTIONS -->
+  <!-- EXTRA -->
   {% if extra_sections %}
-    {% for sec in extra_sections %}
+    {% for sec in extra_sections | default([]) %}
     <div class="section">
-      <h2>{{sec.title}}</h2>
+      <h2>{{ sec.title | default('') }}</h2>
       <ul>
-        {% for item in sec.items %}
-        <li>{{item}}</li>
+        {% for item in sec.items | default([]) %}
+        <li>{{ item }}</li>
         {% endfor %}
       </ul>
     </div>
@@ -255,8 +208,8 @@ body {
 <!-- RIGHT -->
 <div class="right">
 
-  <div class="header-name">{{name}}</div>
-  <div class="header-title">{{title}}</div>
+  <div class="header-name">{{ name | default('') }}</div>
+  <div class="header-title">{{ title | default('') }}</div>
 
   <div class="divider"></div>
 
@@ -264,7 +217,7 @@ body {
   {% if summary %}
   <div class="block">
     <h2>Profile</h2>
-    <div class="summary">{{summary}}</div>
+    <div class="summary">{{ summary }}</div>
   </div>
   {% endif %}
 
@@ -273,18 +226,19 @@ body {
   <div class="block">
     <h2>Experience</h2>
 
-    {% for exp in experience %}
+    {% for exp in experience | default([]) %}
     <div class="job">
       <div class="job-header">
         <div>
-          {{exp.role}} — <span class="company">{{exp.company}}</span>
+          {{ exp.role | default('') }} —
+          <span class="company">{{ exp.company | default('') }}</span>
         </div>
-        <div class="duration">{{exp.duration}}</div>
+        <div class="duration">{{ exp.duration | default('') }}</div>
       </div>
 
       <ul class="points">
-        {% for p in exp.points %}
-        <li>{{p}}</li>
+        {% for p in exp.points | default([]) %}
+        <li>{{ p }}</li>
         {% endfor %}
       </ul>
     </div>
@@ -297,17 +251,17 @@ body {
   <div class="block">
     <h2>Projects</h2>
 
-    {% for p in projects %}
+    {% for p in projects | default([]) %}
     <div class="job">
-      <strong>{{p.name}}</strong>
+      <strong>{{ p.name | default('') }}</strong>
 
       {% if p.description %}
-      <div class="summary">{{p.description}}</div>
+      <div class="summary">{{ p.description }}</div>
       {% endif %}
 
       <ul class="points">
-        {% for point in p.points %}
-        <li>{{point}}</li>
+        {% for point in p.points | default([]) %}
+        <li>{{ point }}</li>
         {% endfor %}
       </ul>
     </div>
