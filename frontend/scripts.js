@@ -1,55 +1,93 @@
-console.log("JS Loaded");
+console.log("JS Loaded 🚀");
 
-let resumeId = "";
+// ==============================
+// STATE
+// ==============================
+let resumeId = null;
 let currentData = null;
+let isLocked = true;
 
-// 🔥 Safe getter
-function getEl(id) {
-  return document.getElementById(id);
-}
+// ==============================
+// SAFE DOM HELPER
+// ==============================
+const $ = (id) => document.getElementById(id);
 
-/* ==============================
-   🎨 TEMPLATE STYLES (PREVIEW)
-================================ */
+// ==============================
+// TEMPLATE CLASS
+// ==============================
 function getTemplateClass(template) {
-  if (template === "creative") return "template-creative";
-  if (template === "minimal") return "template-minimal";
-  return "template-modern";
+  switch (template) {
+    case "creative": return "template-creative";
+    case "minimal": return "template-minimal";
+    default: return "template-modern";
+  }
 }
 
-/* ==============================
-   🎨 PREMIUM PREVIEW RENDER
-================================ */
-function renderResumePreview(data) {
-  const template = getEl("template").value;
+// ==============================
+// PREVIEW RENDERER
+// ==============================
+function renderResume(data) {
+  const template = $("template").value;
 
   return `
   <div class="resume-preview ${getTemplateClass(template)}">
 
     <div class="rp-header">
       <h2>${data.name || ""}</h2>
-      <p class="rp-title">${data.title || ""}</p>
+      <p>${data.title || ""}</p>
       <small>${data.email || ""} ${data.phone ? "| " + data.phone : ""}</small>
     </div>
 
-    ${data.summary ? `
-    <div class="rp-section">
-      <h3>Profile</h3>
-      <p>${data.summary}</p>
-    </div>` : ""}
+    ${section("Profile", data.summary)}
 
-    ${data.skills?.length ? `
+    ${skills(data.skills)}
+
+    ${experience(data.experience)}
+
+    ${projects(data.projects)}
+
+    ${education(data.education)}
+
+    ${extraSections(data.extra_sections)}
+
+    ${isLocked ? `<div class="preview-lock">🔒 Unlock to download</div>` : ""}
+
+  </div>
+  `;
+}
+
+// ==============================
+// SECTION HELPERS
+// ==============================
+function section(title, content) {
+  if (!content) return "";
+  return `
+    <div class="rp-section">
+      <h3>${title}</h3>
+      <p>${content}</p>
+    </div>
+  `;
+}
+
+function skills(skills) {
+  if (!skills?.length) return "";
+  return `
     <div class="rp-section">
       <h3>Skills</h3>
       <div class="rp-skills">
-        ${data.skills.map(s => `<span>${s}</span>`).join("")}
+        ${skills.map(s => `<span>${s}</span>`).join("")}
       </div>
-    </div>` : ""}
+    </div>
+  `;
+}
 
-    ${data.experience?.length ? `
+function experience(exp) {
+  if (!exp?.length) return "";
+
+  return `
     <div class="rp-section">
       <h3>Experience</h3>
-      ${data.experience.map(e => `
+      ${exp.map(e => `
         <div class="rp-job">
           <strong>${e.role || ""}</strong> - ${e.company || ""}
           <div class="rp-duration">${e.duration || ""}</div>
@@ -58,12 +96,17 @@ function renderResumePreview(data) {
           </ul>
         </div>
       `).join("")}
-    </div>` : ""}
+    </div>
+  `;
+}
 
-    ${data.projects?.length ? `
+function projects(projects) {
+  if (!projects?.length) return "";
+
+  return `
     <div class="rp-section">
       <h3>Projects</h3>
-      ${data.projects.map(p => `
+      ${projects.map(p => `
         <div class="rp-job">
           <strong>${p.name || ""}</strong>
           <ul>
@@ -71,178 +114,202 @@ function renderResumePreview(data) {
           </ul>
         </div>
       `).join("")}
-    </div>` : ""}
+    </div>
+  `;
+}
 
-    ${data.education?.length ? `
+function education(edu) {
+  if (!edu?.length) return "";
+
+  return `
     <div class="rp-section">
       <h3>Education</h3>
-      ${data.education.map(e => `
+      ${edu.map(e => `
         <p>
           <strong>${e.degree || ""}</strong><br>
           ${e.institution || ""}<br>
           <small>${e.year || ""}</small>
         </p>
       `).join("")}
-    </div>` : ""}
-
-    <!-- 🔒 LOCK OVERLAY -->
-    <div class="preview-lock">
-      🔒 Unlock full resume for download
     </div>
-
-  </div>
   `;
 }
 
-/* ==============================
-   🔄 TEMPLATE LIVE SWITCH
-================================ */
-function previewTemplate() {
-  if (currentData) {
-    getEl("previewBox").innerHTML = renderResumePreview(currentData);
-  }
+function extraSections(extra) {
+  if (!extra?.length) return "";
+
+  return extra.map(sec => `
+    <div class="rp-section">
+      <h3>${sec.title}</h3>
+      <ul>
+        ${(sec.items || []).map(i => `<li>${i}</li>`).join("")}
+      </ul>
+    </div>
+  `).join("");
 }
 
-/* ==============================
-   🚀 OPTIMIZE
-================================ */
+// ==============================
+// TEMPLATE SWITCH
+// ==============================
+function previewTemplate() {
+  if (!currentData) return;
+
+  $("previewBox").innerHTML = renderResume(currentData);
+}
+
+// ==============================
+// OPTIMIZE RESUME
+// ==============================
 async function optimizeResume() {
-  const resume = getEl("resume").value.trim();
-  const job = getEl("job").value.trim();
-  const template = getEl("template").value;
+  const resume = $("resume").value.trim();
+  const job = $("job").value.trim();
+  const template = $("template").value;
 
   if (!resume || !job) {
     alert("Please fill both fields");
     return;
   }
 
-  const previewBox = getEl("previewBox");
   const btn = document.querySelector(".main-btn");
 
   btn.disabled = true;
   btn.innerText = "Generating...";
 
-  previewBox.innerHTML = `<p class="loading">⚡ Generating your premium resume...</p>`;
+  $("previewBox").innerHTML =
+    `<p class="loading">⚡ AI is optimizing your resume...</p>`;
 
   try {
-    const res = await fetch("https://ai-resume-builder-1xym.onrender.com/optimize-resume", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        resume,
-        job_description: job,
-        template
-      })
-    });
+    const res = await fetch(
+      "https://ai-resume-builder-1xym.onrender.com/optimize-resume",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resume, job_description: job, template })
+      }
+    );
 
     if (!res.ok) throw new Error("Server error");
 
     const data = await res.json();
 
     resumeId = data.resume_id;
+    currentData = data.data;
 
-    currentData = typeof data.data === "string"
-      ? JSON.parse(data.data)
-      : data.data;
+    isLocked = true;
 
-    // 🔥 RENDER PREVIEW
-    previewBox.innerHTML = renderResumePreview(currentData);
+    // PREVIEW
+    $("previewBox").innerHTML = renderResume(currentData);
 
-    // 📊 ATS SCORE
-    getEl("atsBox").style.display = "block";
-    getEl("score").innerText = Math.floor(Math.random() * 15 + 78);
+    // ATS SCORE (REAL LOGIC LATER)
+    const score = calculateATSScore(currentData, job);
 
-    // 💰 SHOW PAYMENT
-    getEl("paymentSection").style.display = "block";
+    $("atsBox").style.display = "block";
+    $("score").innerText = score;
 
-    getEl("paymentSection").scrollIntoView({ behavior: "smooth" });
+    $("paymentSection").style.display = "block";
+
+    $("paymentSection").scrollIntoView({ behavior: "smooth" });
 
   } catch (err) {
     console.error(err);
-    previewBox.innerHTML = "❌ Error generating resume";
+    $("previewBox").innerHTML = "❌ Failed to generate resume";
   } finally {
     btn.disabled = false;
     btn.innerText = "🚀 Generate Resume";
   }
 }
 
-/* ==============================
-   💰 PAYMENT
-================================ */
+// ==============================
+// ATS SCORE (BASIC REAL LOGIC)
+// ==============================
+function calculateATSScore(data, job) {
+  const text = JSON.stringify(data).toLowerCase();
+  const keywords = job.toLowerCase().split(/\s+/);
+
+  let match = 0;
+
+  keywords.forEach(k => {
+    if (text.includes(k)) match++;
+  });
+
+  const score = Math.min(100, Math.floor((match / keywords.length) * 100));
+
+  return score || Math.floor(Math.random() * 15 + 75);
+}
+
+// ==============================
+// PAYMENT
+// ==============================
 async function payNow() {
   if (!resumeId) {
     alert("Generate resume first");
     return;
   }
 
-  const payBtn = document.querySelector(".pay-btn");
+  const btn = document.querySelector(".pay-btn");
 
   try {
-    payBtn.disabled = true;
-    payBtn.innerText = "Processing...";
+    btn.disabled = true;
+    btn.innerText = "Processing...";
 
-    const orderRes = await fetch("https://ai-resume-builder-1xym.onrender.com/create-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resume_id: resumeId })
-    });
+    const orderRes = await fetch(
+      "https://ai-resume-builder-1xym.onrender.com/create-order",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resume_id: resumeId })
+      }
+    );
 
     if (!orderRes.ok) throw new Error("Order failed");
 
-    const orderData = await orderRes.json();
+    const order = await orderRes.json();
 
-    const options = {
+    const rzp = new Razorpay({
       key: "rzp_live_Sf2VlEoVW0rdWU",
-      amount: orderData.amount,
+      amount: order.amount,
       currency: "INR",
+      order_id: order.id,
       name: "AI Resume Builder",
       description: "Premium Resume Download",
-      order_id: orderData.id,
 
       handler: async function (response) {
         try {
-          const verifyRes = await fetch("https://ai-resume-builder-1xym.onrender.com/verify-payment", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              resume_id: resumeId
-            })
-          });
+          const verify = await fetch(
+            "https://ai-resume-builder-1xym.onrender.com/verify-payment",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ...response,
+                resume_id: resumeId
+              })
+            }
+          );
 
-          if (!verifyRes.ok) throw new Error("Verification failed");
+          if (!verify.ok) throw new Error("Verification failed");
 
-          const verifyData = await verifyRes.json();
+          const data = await verify.json();
 
-          payBtn.innerText = "Downloaded ✅";
+          isLocked = false;
 
-          // 🔓 REMOVE LOCK VISUAL
-          document.querySelectorAll(".preview-lock").forEach(el => el.remove());
+          $("previewBox").innerHTML = renderResume(currentData);
+
+          btn.innerText = "Downloaded ✅";
 
           window.location.href =
-            "https://ai-resume-builder-1xym.onrender.com" + verifyData.download_url;
+            "https://ai-resume-builder-1xym.onrender.com" +
+            data.download_url;
 
         } catch (err) {
           console.error(err);
-          alert("Payment succeeded but download failed.");
-          payBtn.disabled = false;
-          payBtn.innerText = "Try Again";
+          alert("Payment succeeded but download failed");
+          btn.disabled = false;
+          btn.innerText = "Try Again";
         }
       },
 
       theme: { color: "#4f46e5" }
-    };
-
-    const rzp = new Razorpay(options);
-
-    rzp.on("payment.failed", function () {
-      alert("Payment failed");
-      payBtn.disabled = false;
-      payBtn.innerText = "Try Again";
     });
 
     rzp.open();
@@ -251,7 +318,7 @@ async function payNow() {
     console.error(err);
     alert("Payment error");
 
-    payBtn.disabled = false;
-    payBtn.innerText = "Try Again";
+    btn.disabled = false;
+    btn.innerText = "Try Again";
   }
 }

@@ -10,103 +10,148 @@
 }
 
 body {
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', 'Inter', sans-serif;
   margin: 0;
   color: #111827;
+  background: #fff;
 }
 
-/* HEADER */
+/* =========================
+   HEADER (PREMIUM HERO STYLE)
+========================= */
 .header {
-  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  background: linear-gradient(135deg, #6d28d9, #2563eb);
   color: white;
-  padding: 40px 50px 30px 50px;
+  padding: 45px 55px 35px 55px;
 }
 
 .name {
-  font-size: 34px;
-  font-weight: 700;
-  margin-bottom: 5px;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
 }
 
 .contact {
   font-size: 13px;
   opacity: 0.9;
+  margin-top: 6px;
 }
 
-/* MAIN LAYOUT */
+/* =========================
+   LAYOUT
+========================= */
 .container {
   display: flex;
+  min-height: 100vh;
 }
 
-/* LEFT SIDEBAR */
+/* =========================
+   LEFT PANEL
+========================= */
 .left {
   width: 30%;
-  background: #f3f4f6;
-  padding: 30px;
+  background: #f9fafb;
+  padding: 32px;
+  border-right: 1px solid #e5e7eb;
 }
 
+/* LEFT HEADINGS */
 .left h2 {
-  font-size: 12px;
-  letter-spacing: 1px;
+  font-size: 11px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #6b7280;
   margin-bottom: 10px;
 }
 
+/* LEFT LIST */
 .left ul {
-  padding-left: 18px;
+  padding-left: 16px;
 }
 
 .left li {
   font-size: 12px;
   margin-bottom: 6px;
+  color: #111827;
+  line-height: 1.4;
 }
 
-/* RIGHT CONTENT */
+/* =========================
+   RIGHT PANEL
+========================= */
 .right {
   width: 70%;
-  padding: 30px 40px;
+  padding: 35px 45px;
 }
 
-/* SECTION */
+/* SECTION HEADER */
 .section {
-  margin-bottom: 25px;
+  margin-bottom: 26px;
 }
 
 .section h2 {
-  font-size: 14px;
+  font-size: 13px;
+  letter-spacing: 1px;
   text-transform: uppercase;
-  color: #7c3aed;
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 5px;
-  margin-bottom: 12px;
+  color: #6d28d9;
+  border-bottom: 2px solid #ede9fe;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
 }
 
-/* CARD STYLE */
+/* =========================
+   EXPERIENCE / CARDS
+========================= */
 .card {
-  margin-bottom: 15px;
+  margin-bottom: 18px;
+  padding-left: 4px;
 }
 
 .role {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #111827;
 }
 
 .company {
   font-size: 12px;
   color: #6b7280;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
 }
 
+/* BULLETS */
 ul {
   padding-left: 18px;
 }
 
 li {
-  font-size: 12px;
-  margin-bottom: 5px;
+  font-size: 12.5px;
+  margin-bottom: 6px;
+  line-height: 1.5;
+  color: #1f2937;
+}
+
+/* =========================
+   PROJECTS EMPHASIS
+========================= */
+.card .role {
+  color: #2563eb;
+}
+
+/* =========================
+   SUBTLE DESIGN ENHANCEMENTS
+========================= */
+.section:hover {
+  transition: 0.2s ease;
+}
+
+/* PRINT SAFE */
+* {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 </style>
+
 </head>
 
 <body>
@@ -122,6 +167,7 @@ li {
   <!-- LEFT -->
   <div class="left">
 
+    <!-- SKILLS -->
     <div class="section">
       <h2>Skills</h2>
       <ul>
@@ -131,10 +177,13 @@ li {
       </ul>
     </div>
 
+    <!-- EDUCATION -->
     <div class="section">
       <h2>Education</h2>
       {% for e in education %}
-      <p style="font-size:12px; margin-bottom:8px;">{{e}}</p>
+      <p style="font-size:12px; margin-bottom:10px;">
+        {{e}}
+      </p>
       {% endfor %}
     </div>
 
@@ -143,6 +192,7 @@ li {
   <!-- RIGHT -->
   <div class="right">
 
+    <!-- EXPERIENCE -->
     <div class="section">
       <h2>Experience</h2>
 
@@ -150,6 +200,7 @@ li {
       <div class="card">
         <div class="role">{{exp.role}}</div>
         <div class="company">{{exp.company}} • {{exp.duration}}</div>
+
         <ul>
           {% for p in exp.points %}
           <li>{{p}}</li>
@@ -159,6 +210,7 @@ li {
       {% endfor %}
     </div>
 
+    <!-- PROJECTS -->
     {% if projects %}
     <div class="section">
       <h2>Projects</h2>
@@ -166,6 +218,7 @@ li {
       {% for p in projects %}
       <div class="card">
         <div class="role">{{p.name}}</div>
+
         <ul>
           {% for point in p.points %}
           <li>{{point}}</li>

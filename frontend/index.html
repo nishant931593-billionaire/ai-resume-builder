@@ -5,151 +5,84 @@
 
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-  <!-- Font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="data:,">
 </head>
 
 <body>
 
 <div class="container">
 
-  <!-- 🔥 HERO -->
+  <!-- HERO -->
   <div class="hero">
     <h1>Get Interview-Ready Resume in 60 Seconds 🚀</h1>
     <p class="subtitle">
-      AI rewrites your resume → ATS optimized → Premium design → Instant PDF
+      AI rewrites + ATS optimization + premium PDF
     </p>
 
-    <!-- 🔥 TRUST BAR -->
     <div class="trust-bar">
-      ⭐ 500+ resumes generated today &nbsp; | &nbsp; 🔒 Secure payment &nbsp; | &nbsp; ⚡ Instant download
+      ⭐ 500+ resumes today | 🔒 Secure | ⚡ Instant PDF
     </div>
   </div>
 
-  <!-- 🧠 INPUT -->
-  <div class="card input-card">
+  <!-- INPUT -->
+  <div class="card">
 
-    <label>Your Resume</label>
-    <textarea id="resume" placeholder="Paste your resume here..."></textarea>
+    <label>Resume</label>
+    <textarea id="resume" placeholder="Paste your resume..."></textarea>
 
     <label>Job Description</label>
-    <textarea id="job" placeholder="Paste job description here..."></textarea>
+    <textarea id="job" placeholder="Paste job description..."></textarea>
 
-    <!-- TEMPLATE -->
-    <label>Select Template</label>
-    <select id="template" onchange="previewTemplate()">
-      <option value="modern">Modern (Most Popular)</option>
-      <option value="minimal">Minimal (ATS Safe)</option>
-      <option value="creative">Creative (Designer Style)</option>
+    <label>Template</label>
+    <select id="template">
+      <option value="modern">Modern</option>
+      <option value="minimal">Minimal</option>
+      <option value="creative">Creative</option>
     </select>
 
     <button onclick="optimizeResume()" class="main-btn">
-      🚀 Generate My Resume
+      🚀 Generate Resume
     </button>
 
   </div>
 
-  <!-- 📄 LIVE PREVIEW -->
-  <div class="card preview-card">
-    <div class="preview-header">
-      <h2>Live Preview</h2>
-      <span class="locked">🔒 Full version locked</span>
-    </div>
+  <!-- LIVE PREVIEW -->
+  <div class="card">
+
+    <h2>Live Preview</h2>
 
     <div id="previewBox">
-      <p class="placeholder">Your premium resume will appear here...</p>
+      <p class="placeholder">Your AI resume will appear here...</p>
     </div>
+
   </div>
 
-  <!-- 📊 ATS -->
+  <!-- ATS SCORE -->
   <div id="atsBox" class="card" style="display:none;">
     <h3>ATS Score: <span id="score">0</span>/100</h3>
-    <p>Matched Skills:</p>
     <ul id="keywords"></ul>
   </div>
 
-  <!-- 💰 PAYMENT -->
-  <div id="paymentSection" class="card payment-card" style="display:none;">
+  <!-- PAYMENT -->
+  <div id="paymentSection" class="card" style="display:none;">
 
-    <h2>Unlock Your Resume</h2>
+    <h2>Unlock Full Resume</h2>
 
     <p class="price">₹49</p>
 
-    <p class="warning">
-      ⚠ This version is blurred. Unlock to download full resume.
-    </p>
+    <p>Download premium ATS-optimized PDF</p>
 
     <button onclick="payNow()" class="pay-btn">
-      🚀 Download Now
+      Pay & Download
     </button>
 
-    <p class="trust">
-      ✔ Pay only if satisfied <br>
-      🔒 Razorpay Secure Payment
-    </p>
-
-  </div>
-
-  <!-- 🔥 URGENCY -->
-  <div class="section urgency">
-    ⏳ Today only: 50% cheaper than other resume tools
-  </div>
-
-  <!-- 🔥 BEFORE AFTER -->
-  <div class="section">
-    <h2>Before vs After</h2>
-
-    <div class="compare">
-      <div class="bad-box">
-        ❌ Responsible for managing team
-      </div>
-
-      <div class="good-box">
-        ✅ Led a team of 5 improving workflow efficiency and delivery timelines
-      </div>
-    </div>
-  </div>
-
-  <!-- 💥 PROBLEM -->
-  <div class="section">
-    <h2>Why Most Resumes Get Rejected</h2>
-    <ul>
-      <li>❌ Not ATS optimized</li>
-      <li>❌ Weak bullet points</li>
-      <li>❌ No keyword matching</li>
-    </ul>
-  </div>
-
-  <!-- ✅ SOLUTION -->
-  <div class="section">
-    <h2>What You Get</h2>
-    <ul>
-      <li>✔ ATS-optimized resume</li>
-      <li>✔ Strong bullet points</li>
-      <li>✔ Clean premium design</li>
-      <li>✔ Instant PDF download</li>
-    </ul>
-  </div>
-
-  <!-- 🔥 SOCIAL PROOF -->
-  <div class="section social-proof">
-    <p>🔥 127 resumes optimized today</p>
-    <p>⭐ Trusted by job seekers</p>
   </div>
 
 </div>
 
 <script src="scripts.js"></script>
-
-<script>
-function previewTemplate() {
-  const template = document.getElementById("template").value;
-  console.log("Template:", template);
-}
-</script>
 
 </body>
 </html>

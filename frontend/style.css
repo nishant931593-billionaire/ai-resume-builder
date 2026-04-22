@@ -1,26 +1,33 @@
-/* 🔄 RESET */
+/* ==============================
+   RESET
+============================== */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* 🌐 BODY */
+/* ==============================
+   GLOBAL
+============================== */
 body {
   font-family: 'Inter', 'Segoe UI', sans-serif;
   background: linear-gradient(135deg, #eef2ff, #f8fafc);
   color: #1f2937;
-  letter-spacing: 0.2px;
 }
 
-/* 📦 CONTAINER */
+/* ==============================
+   LAYOUT
+============================== */
 .container {
   max-width: 1100px;
   margin: auto;
   padding: 40px 20px;
 }
 
-/* 🧠 HERO */
+/* ==============================
+   HERO
+============================== */
 .hero {
   text-align: center;
   margin-bottom: 30px;
@@ -29,30 +36,32 @@ body {
 .hero h1 {
   font-size: 34px;
   font-weight: 700;
-  color: #111827;
 }
 
 .subtitle {
   color: #6b7280;
-  font-size: 16px;
   margin-top: 8px;
 }
 
-/* 🧾 CARD */
+/* ==============================
+   CARD
+============================== */
 .card {
-  background: #ffffff;
+  background: #fff;
   padding: 25px;
   margin-top: 20px;
   border-radius: 18px;
   box-shadow: 0 20px 45px rgba(0,0,0,0.08);
-  transition: all 0.25s ease;
+  transition: 0.25s ease;
 }
 
 .card:hover {
-  transform: translateY(-6px) scale(1.01);
+  transform: translateY(-4px);
 }
 
-/* ✏️ INPUTS */
+/* ==============================
+   INPUTS
+============================== */
 textarea {
   width: 100%;
   height: 130px;
@@ -63,18 +72,17 @@ textarea {
   border: 1px solid #e5e7eb;
   font-size: 14px;
   resize: none;
-  transition: all 0.2s;
   background: #f9fafb;
+  transition: 0.2s;
 }
 
 textarea:focus {
   border-color: #6366f1;
-  box-shadow: 0 0 12px rgba(99,102,241,0.25);
+  box-shadow: 0 0 10px rgba(99,102,241,0.25);
   outline: none;
   background: #fff;
 }
 
-/* 🎨 SELECT */
 select {
   width: 100%;
   padding: 12px;
@@ -84,7 +92,9 @@ select {
   background: #f9fafb;
 }
 
-/* 🚀 MAIN BUTTON */
+/* ==============================
+   BUTTONS
+============================== */
 .main-btn {
   width: 100%;
   padding: 16px;
@@ -96,7 +106,6 @@ select {
   font-weight: 600;
   cursor: pointer;
   transition: 0.25s;
-  box-shadow: 0 10px 25px rgba(99,102,241,0.4);
 }
 
 .main-btn:hover {
@@ -105,14 +114,16 @@ select {
 }
 
 /* ==============================
-   🎯 PREMIUM RESUME PREVIEW
-================================ */
-
+   PREVIEW CONTAINER
+============================== */
 #previewBox {
   max-height: 650px;
   overflow-y: auto;
 }
 
+/* ==============================
+   RESUME PREVIEW (PRINT SAFE)
+============================== */
 .resume-preview {
   background: white;
   width: 100%;
@@ -120,11 +131,6 @@ select {
   margin: auto;
   padding: 40px;
   border-radius: 6px;
-
-  /* 📄 A4 LOOK */
-  aspect-ratio: 1 / 1.414;
-
-  /* 💎 SHADOW */
   box-shadow: 0 25px 60px rgba(0,0,0,0.12);
 }
 
@@ -138,11 +144,10 @@ select {
 .rp-header h2 {
   font-size: 26px;
   font-weight: 700;
-  letter-spacing: 0.5px;
 }
 
 .rp-header p {
-  color: #6366f1;
+  color: #4f46e5;
   font-weight: 500;
 }
 
@@ -152,18 +157,18 @@ select {
 
 /* SECTIONS */
 .rp-section {
-  margin-top: 20px;
+  margin-top: 18px;
   padding-top: 10px;
   border-top: 1px solid #e5e7eb;
 }
 
 .rp-section h3 {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 1.2px;
+  text-transform: uppercase;
   color: #4f46e5;
   margin-bottom: 8px;
-  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* SKILLS */
@@ -173,17 +178,16 @@ select {
 }
 
 .rp-skills span {
-  background: linear-gradient(135deg, #eef2ff, #e0e7ff);
-  padding: 6px 12px;
-  margin: 5px;
+  background: #eef2ff;
+  padding: 6px 10px;
+  margin: 4px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 500;
 }
 
 /* EXPERIENCE */
 .rp-job {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 .rp-job strong {
@@ -193,7 +197,6 @@ select {
 .rp-duration {
   font-size: 12px;
   color: #6b7280;
-  margin-bottom: 5px;
 }
 
 .rp-job ul {
@@ -202,23 +205,42 @@ select {
 
 .rp-job li {
   font-size: 13px;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
-/* 📊 ATS */
+/* ==============================
+   LOCK OVERLAY (IMPROVED UX)
+============================== */
+.preview-lock {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #111827;
+  font-size: 16px;
+}
+
+/* wrapper needed for overlay */
+.resume-preview {
+  position: relative;
+}
+
+/* ==============================
+   ATS BOX
+============================== */
 #atsBox {
   background: #eef2ff;
   border-radius: 12px;
   padding: 15px;
 }
 
-/* 🔒 BLUR */
-.blur {
-  filter: blur(6px);
-  pointer-events: none;
-}
-
-/* 💰 PAYMENT */
+/* ==============================
+   PAYMENT CARD (FIXED UX)
+============================== */
 #paymentSection {
   background: white;
   border: 2px solid #6366f1;
@@ -226,78 +248,36 @@ select {
   padding: 25px;
   text-align: center;
 
-  /* 🔥 STICKY CONVERSION */
-  position: sticky;
-  bottom: 20px;
+  /* safer than sticky */
+  position: relative;
+  margin-top: 20px;
 }
 
-/* 💸 PRICE */
+/* PRICE */
 .price {
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 700;
-  color: #111827;
 }
 
-/* ⚠ WARNING */
-.warning {
-  color: #dc2626;
-  font-weight: 600;
-  margin-top: 5px;
-}
-
-/* 💳 PAY BUTTON */
+/* PAY BUTTON */
 .pay-btn {
   width: 100%;
-  margin-top: 18px;
+  margin-top: 15px;
   padding: 16px;
   border: none;
   border-radius: 14px;
-  background: linear-gradient(135deg, #111827, #1f2937);
+  background: #111827;
   color: white;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.25s;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.25);
 }
 
-.pay-btn:hover {
-  transform: scale(1.03);
-}
-
-/* 🔐 TRUST */
-.trust {
-  margin-top: 10px;
-  font-size: 13px;
-  color: #6b7280;
-}
-
-/* 📊 COMPARE */
-.compare {
-  display: flex;
-  gap: 12px;
-  margin-top: 10px;
-}
-
-.bad-box, .good-box {
-  flex: 1;
-  padding: 14px;
-  border-radius: 10px;
-}
-
-.bad-box {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.good-box {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-/* 📚 SECTIONS */
+/* ==============================
+   SECTIONS
+============================== */
 .section {
-  margin-top: 30px;
+  margin-top: 25px;
 }
 
 .section h2 {
@@ -305,7 +285,9 @@ select {
   margin-bottom: 10px;
 }
 
-/* ⏳ LOADING */
+/* ==============================
+   LOADING
+============================== */
 .loading {
   text-align: center;
   font-size: 14px;
@@ -319,14 +301,12 @@ select {
   100% { opacity: 0.5; }
 }
 
-/* 📱 MOBILE */
+/* ==============================
+   MOBILE
+============================== */
 @media (max-width: 600px) {
   .container {
     padding: 20px;
-  }
-
-  .compare {
-    flex-direction: column;
   }
 
   .resume-preview {

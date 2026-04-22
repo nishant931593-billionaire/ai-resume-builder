@@ -9,6 +9,7 @@ from openai import OpenAI
 import razorpay
 from jinja2 import Template
 from weasyprint import HTML
+import uvicorn
 
 # ---------------- ENV ----------------
 load_dotenv()
@@ -37,124 +38,80 @@ razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # ---------------- STORAGE ----------------
 resume_store = {}
-PRICE = 100  # ₹49
+PRICE = 4900  # ₹49 in paise
 
 os.makedirs("generated", exist_ok=True)
 
-# ---------------- MODELS ----------------
+# ---------------- INPUT ----------------
 class ResumeRequest(BaseModel):
     resume: str
     job_description: str
     template: str = "modern"
 
-class PaymentRequest(BaseModel):
-    resume_id: str
 
-# ---------------- SAFE JSON ----------------
+# ---------------- SAFE JSON PARSER ----------------
 def safe_json(text: str):
     try:
         text = text.strip()
+
         if "```" in text:
             text = text.split("```")[1]
 
         start = text.find("{")
         end = text.rfind("}")
-        return json.loads(text[start:end+1])
+
+        return json.loads(text[start:end + 1])
     except:
         return {}
 
-# ---------------- ENRICH ----------------
-def enrich(data):
-    data.setdefault("name", "")
-    data.setdefault("email", "")
-    data.setdefault("phone", "")
-    data.setdefault("title", "Professional")
-    data.setdefault("summary", "")
-    data.setdefault("skills", [])
-    data.setdefault("experience", [])
-    data.setdefault("projects", [])
-    data.setdefault("education", [])
 
-    # 🔥 Summary
-    if not data["summary"]:
-        data["summary"] = (
-            "Detail-oriented professional with strong analytical and problem-solving skills. "
-            "Experienced in collaborating with teams, analyzing data, and delivering "
-            "high-quality results in fast-paced environments."
-        )
+# ---------------- NORMALIZE (STRICT CONTROL) ----------------
+def normalize(data):
+    return {
+        "name": data.get("name", ""),
+        "email": data.get("email", ""),
+        "phone": data.get("phone", ""),
+        "title": data.get("title", ""),
+        "summary": data.get("summary", ""),
+        "skills": data.get("skills", []),
+        "experience": data.get("experience", []),
+        "projects": data.get("projects", []),
+        "education": data.get("education", []),
 
-    # 🔥 Skills (min 6)
-    if len(data["skills"]) < 6:
-        extras = [
-            "Communication", "Problem Solving", "Teamwork",
-            "Time Management", "Adaptability", "Attention to Detail"
-        ]
-        for s in extras:
-            if s not in data["skills"]:
-                data["skills"].append(s)
-            if len(data["skills"]) >= 6:
-                break
+        # ONLY include if exists (dynamic rendering)
+        "extra_sections": data.get("extra_sections", [])
+    }
 
-    # 🔥 Experience (NO repetition)
-    DEFAULT_EXP_POINTS = [
-        "Analyzed data to identify trends and support business decisions",
-        "Prepared reports and dashboards to present insights clearly",
-        "Collaborated with cross-functional teams to deliver tasks efficiently",
-        "Cleaned and structured data to improve accuracy and usability"
-    ]
 
-    for exp in data["experience"]:
-        exp.setdefault("role", "")
-        exp.setdefault("company", "")
-        exp.setdefault("duration", "")
-        exp.setdefault("points", [])
-
-        i = 0
-        while len(exp["points"]) < 4 and i < len(DEFAULT_EXP_POINTS):
-            if DEFAULT_EXP_POINTS[i] not in exp["points"]:
-                exp["points"].append(DEFAULT_EXP_POINTS[i])
-            i += 1
-
-    # 🔥 Projects
-    DEFAULT_PROJECT_POINTS = [
-        "Designed and developed features aligned with project requirements",
-        "Implemented structured solutions ensuring performance and usability",
-        "Tested and refined functionality to improve overall experience"
-    ]
-
-    for proj in data["projects"]:
-        proj.setdefault("name", "")
-        proj.setdefault("description", "")
-        proj.setdefault("points", [])
-
-        i = 0
-        while len(proj["points"]) < 3 and i < len(DEFAULT_PROJECT_POINTS):
-            if DEFAULT_PROJECT_POINTS[i] not in proj["points"]:
-                proj["points"].append(DEFAULT_PROJECT_POINTS[i])
-            i += 1
-
-    return data
-
-# ---------------- AI ----------------
+# ---------------- STRICT AI ENGINE ----------------
 def generate_resume(resume_text, job_description):
+
     prompt = f"""
-You are a professional resume writer.
+You are a STRICT resume optimization engine.
 
-STRICT:
-- Do NOT add fake experience or projects
-- Only improve existing content
+ABSOLUTE RULES:
+- NEVER invent information
+- NEVER add new jobs, projects, skills, or sections
+- ONLY use information present in input resume
+- You may rewrite and improve wording ONLY
+- If something is missing → leave empty
 
-GOAL:
-Make the resume PREMIUM and HUMAN-WRITTEN
+SECTION RULES:
 
-RULES:
-- Add title
-- Add 3–4 line summary
-- Experience → 3–5 UNIQUE bullet points
-- Projects → 2–3 bullet points
-- Avoid repetition
+1. EXPERIENCE:
+- You MAY expand bullet points
+- You CANNOT add new roles or companies
 
-OUTPUT JSON:
+2. PROJECTS:
+- You MAY improve descriptions
+- You CANNOT create new projects
+
+3. OPTIONAL SECTIONS:
+(hobbies, certifications, extracurricular, languages)
+- ONLY include if already present in resume
+- If not present → return []
+
+OUTPUT FORMAT (STRICT JSON):
 
 {{
   "name": "",
@@ -184,13 +141,14 @@ OUTPUT JSON:
       "institution": "",
       "year": ""
     }}
-  ]
+  ],
+  "extra_sections": []
 }}
 
 RESUME:
 {resume_text}
 
-JOB:
+JOB DESCRIPTION:
 {job_description}
 """
 
@@ -202,7 +160,8 @@ JOB:
 
     return safe_json(response.choices[0].message.content)
 
-# ---------------- OPTIMIZE ----------------
+
+# ---------------- OPTIMIZE ENDPOINT ----------------
 @app.post("/optimize-resume")
 def optimize_resume(data: ResumeRequest):
     try:
@@ -210,7 +169,7 @@ def optimize_resume(data: ResumeRequest):
             data.template = "modern"
 
         raw = generate_resume(data.resume, data.job_description)
-        result = enrich(raw)
+        result = normalize(raw)
 
         resume_id = str(uuid.uuid4())
 
@@ -232,10 +191,14 @@ def optimize_resume(data: ResumeRequest):
         print("ERROR:", e)
         raise HTTPException(status_code=500, detail="Processing failed")
 
-# ---------------- ORDER ----------------
+
+# ---------------- PAYMENT ----------------
 @app.post("/create-order")
-def create_order(data: PaymentRequest):
-    if data.resume_id not in resume_store:
+def create_order(payload: dict):
+
+    resume_id = payload.get("resume_id")
+
+    if resume_id not in resume_store:
         raise HTTPException(status_code=404, detail="Invalid resume_id")
 
     order = razorpay_client.order.create({
@@ -244,12 +207,15 @@ def create_order(data: PaymentRequest):
         "payment_capture": 1
     })
 
-    resume_store[data.resume_id]["order_id"] = order["id"]
+    resume_store[resume_id]["order_id"] = order["id"]
+
     return order
 
-# ---------------- VERIFY ----------------
+
+# ---------------- VERIFY PAYMENT ----------------
 @app.post("/verify-payment")
 def verify_payment(payload: dict):
+
     resume_id = payload.get("resume_id")
 
     if resume_id not in resume_store:
@@ -268,8 +234,10 @@ def verify_payment(payload: dict):
 
     return {"download_url": f"/download/{resume_id}"}
 
-# ---------------- PDF ----------------
+
+# ---------------- PDF GENERATION ----------------
 def generate_pdf(resume_id: str):
+
     data = resume_store[resume_id]["data"]
     template_name = resume_store[resume_id]["template"]
 
@@ -279,14 +247,18 @@ def generate_pdf(resume_id: str):
     html = template.render(**data)
 
     file_path = f"generated/{uuid.uuid4().hex}.pdf"
+
     HTML(string=html).write_pdf(file_path)
 
     resume_store[resume_id]["file"] = file_path
+
     return file_path
+
 
 # ---------------- DOWNLOAD ----------------
 @app.get("/download/{resume_id}")
 def download_resume(resume_id: str):
+
     if resume_id not in resume_store:
         raise HTTPException(status_code=404, detail="Not found")
 
@@ -301,8 +273,9 @@ def download_resume(resume_id: str):
         media_type="application/pdf",
         filename="resume.pdf"
     )
-import uvicorn
 
+
+# ---------------- RUN ----------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))  # Render provides PORT
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run("main:app", host="0.0.0.0", port=port)
