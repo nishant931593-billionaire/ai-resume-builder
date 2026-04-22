@@ -10,7 +10,7 @@
 }
 
 body {
-  font-family: 'Segoe UI', 'Inter', sans-serif;
+  font-family: 'Segoe UI', sans-serif;
   margin: 0;
   color: #111827;
 }
@@ -19,100 +19,80 @@ body {
 .header {
   background: linear-gradient(135deg, #6d28d9, #2563eb);
   color: white;
-  padding: 45px 55px 35px;
+  padding: 30px 40px;
 }
 
 .name {
-  font-size: 34px;
-  font-weight: 800;
+  font-size: 28px;
+  font-weight: 700;
 }
 
 .contact {
-  font-size: 13px;
-  margin-top: 6px;
-  opacity: 0.9;
+  font-size: 12px;
+  margin-top: 5px;
 }
 
-/* LAYOUT */
-.container {
-  display: flex;
+/* LAYOUT FIX (TABLE INSTEAD OF FLEX) */
+.layout {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-/* LEFT PANEL */
 .left {
   width: 30%;
   background: #f9fafb;
-  padding: 30px;
-  border-right: 1px solid #e5e7eb;
+  padding: 20px;
+  vertical-align: top;
 }
 
-.left h2 {
-  font-size: 11px;
-  text-transform: uppercase;
-  color: #6b7280;
-  margin-bottom: 10px;
-}
-
-.left ul {
-  padding-left: 16px;
-}
-
-.left li {
-  font-size: 12px;
-  margin-bottom: 6px;
-}
-
-/* RIGHT PANEL */
 .right {
   width: 70%;
-  padding: 30px 40px;
+  padding: 20px 25px;
+  vertical-align: top;
 }
 
 /* SECTION */
 .section {
-  margin-bottom: 25px;
+  margin-bottom: 18px;
 }
 
 .section h2 {
-  font-size: 13px;
+  font-size: 12px;
   text-transform: uppercase;
   color: #6d28d9;
-  border-bottom: 2px solid #ede9fe;
-  padding-bottom: 5px;
-  margin-bottom: 12px;
-}
-
-/* CARD */
-.card {
-  margin-bottom: 16px;
-}
-
-.role {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.company {
-  font-size: 12px;
-  color: #6b7280;
-  margin-bottom: 5px;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 8px;
 }
 
 /* TEXT */
 ul {
-  padding-left: 18px;
+  padding-left: 16px;
 }
 
 li {
-  font-size: 12.5px;
-  margin-bottom: 5px;
+  font-size: 12px;
+  margin-bottom: 4px;
 }
 
-/* SUMMARY */
 .summary {
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* EXPERIENCE */
+.card {
+  margin-bottom: 12px;
+}
+
+.role {
+  font-weight: 600;
   font-size: 13px;
-  line-height: 1.6;
-  color: #374151;
+}
+
+.company {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 4px;
 }
 
 /* PRINT FIX */
@@ -128,133 +108,123 @@ li {
 
 <!-- HEADER -->
 <div class="header">
-  <div class="name">{{ name or "" }}</div>
+  <div class="name">{{ name }}</div>
   <div class="contact">
-    {{ email or "" }}{% if phone %} | {{ phone }}{% endif %}
+    {{ email }}{% if phone %} | {{ phone }}{% endif %}
   </div>
 </div>
 
-<div class="container">
+<!-- TABLE LAYOUT -->
+<table class="layout">
+<tr>
 
-  <!-- LEFT -->
-  <div class="left">
+<!-- LEFT -->
+<td class="left">
 
-    <!-- SKILLS -->
-    {% if skills %}
-    <div class="section">
-      <h2>Skills</h2>
+  {% if skills %}
+  <div class="section">
+    <h2>Skills</h2>
+    <ul>
+      {% for s in skills %}
+        {% if s is string %}
+          <li>{{ s }}</li>
+        {% elif s.name %}
+          <li>{{ s.name }}{% if s.details %} — {{ s.details | join(", ") }}{% endif %}</li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if education %}
+  <div class="section">
+    <h2>Education</h2>
+    {% for e in education %}
+    <p>
+      <strong>{{ e.degree }}</strong><br>
+      {{ e.institution }}<br>
+      <small>{{ e.year }}</small>
+    </p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if extra_sections %}
+    {% for sec in extra_sections %}
+      {% if sec["items"] %}
+      <div class="section">
+        <h2>{{ sec.title }}</h2>
+        <ul>
+          {% for item in sec["items"] %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+
+</td>
+
+<!-- RIGHT -->
+<td class="right">
+
+  {% if summary %}
+  <div class="section">
+    <h2>Profile</h2>
+    <p class="summary">{{ summary }}</p>
+  </div>
+  {% endif %}
+
+  {% if experience %}
+  <div class="section">
+    <h2>Experience</h2>
+
+    {% for exp in experience %}
+    <div class="card">
+      <div class="role">{{ exp.role }}</div>
+      <div class="company">{{ exp.company }} • {{ exp.duration }}</div>
+
+      {% if exp.points %}
       <ul>
-        {% for s in skills %}
-          {% if s is string %}
-            <li>{{ s }}</li>
-          {% elif s is mapping and s.get("name") %}
-            <li>
-              {{ s.get("name") }}
-              {% if s.get("details") %}
-                — {{ s.get("details", []) | join(", ") }}
-              {% endif %}
-            </li>
-          {% endif %}
+        {% for p in exp.points %}
+        <li>{{ p }}</li>
         {% endfor %}
       </ul>
+      {% endif %}
     </div>
-    {% endif %}
-
-    <!-- EDUCATION -->
-    {% if education %}
-    <div class="section">
-      <h2>Education</h2>
-      {% for e in education %}
-      <p style="font-size:12px; margin-bottom:8px;">
-        <strong>{{ e.get("degree", "") }}</strong><br>
-        {{ e.get("institution", "") }}<br>
-        <small>{{ e.get("year", "") }}</small>
-      </p>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- EXTRA SECTIONS -->
-    {% if extra_sections %}
-      {% for sec in extra_sections %}
-        {% if sec is mapping and sec.get("items") %}
-        <div class="section">
-          <h2>{{ sec.get("title", "") }}</h2>
-          <ul>
-            {% for item in sec.get("items", []) %}
-            <li>{{ item }}</li>
-            {% endfor %}
-          </ul>
-        </div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-
+    {% endfor %}
   </div>
+  {% endif %}
 
-  <!-- RIGHT -->
-  <div class="right">
+  {% if projects %}
+  <div class="section">
+    <h2>Projects</h2>
 
-    <!-- PROFILE -->
-    {% if summary %}
-    <div class="section">
-      <h2>Profile</h2>
-      <p class="summary">{{ summary }}</p>
+    {% for p in projects %}
+    <div class="card">
+      <div class="role">{{ p.name }}</div>
+
+      {% if p.description %}
+      <p class="summary">{{ p.description }}</p>
+      {% endif %}
+
+      {% if p.points %}
+      <ul>
+        {% for point in p.points %}
+        <li>{{ point }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
     </div>
-    {% endif %}
-
-    <!-- EXPERIENCE -->
-    {% if experience %}
-    <div class="section">
-      <h2>Experience</h2>
-
-      {% for exp in experience %}
-      <div class="card">
-        <div class="role">{{ exp.get("role", "") }}</div>
-        <div class="company">
-          {{ exp.get("company", "") }} • {{ exp.get("duration", "") }}
-        </div>
-
-        {% if exp.get("points") %}
-        <ul>
-          {% for p in exp.get("points", []) %}
-          <li>{{ p }}</li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- PROJECTS -->
-    {% if projects %}
-    <div class="section">
-      <h2>Projects</h2>
-
-      {% for p in projects %}
-      <div class="card">
-        <div class="role">{{ p.get("name", "") }}</div>
-
-        {% if p.get("description") %}
-        <p class="summary">{{ p.get("description") }}</p>
-        {% endif %}
-
-        {% if p.get("points") %}
-        <ul>
-          {% for point in p.get("points", []) %}
-          <li>{{ point }}</li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-      </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
+    {% endfor %}
   </div>
+  {% endif %}
 
-</div>
+</td>
+
+</tr>
+</table>
 
 </body>
 </html>
