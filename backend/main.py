@@ -38,7 +38,7 @@ razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # ---------------- STORAGE ----------------
 resume_store = {}
-PRICE = 100  # ₹49
+PRICE = 100
 
 os.makedirs("generated", exist_ok=True)
 
@@ -48,43 +48,76 @@ class ResumeRequest(BaseModel):
     job_description: str
     template: str = "modern"
 
-# ---------------- SAFE HELPERS ----------------
-def force_list(x):
-    return x if isinstance(x, list) else []
-
-def force_str(x):
-    return str(x) if x else ""
-
 # ---------------- SAFE JSON ----------------
 def safe_json(text: str):
     try:
         text = text.strip()
-
         if "```" in text:
             text = text.split("```")[1]
-
         start = text.find("{")
         end = text.rfind("}")
-
         return json.loads(text[start:end + 1])
     except Exception as e:
         print("JSON ERROR:", e)
         return {}
 
-# ---------------- NORMALIZE ----------------
+# ---------------- NORMALIZE FIX ----------------
 def normalize(data):
-    return {
-        "name": force_str(data.get("name")),
-        "email": force_str(data.get("email")),
-        "phone": force_str(data.get("phone")),
-        "title": force_str(data.get("title")),
-        "summary": force_str(data.get("summary")),
 
-        "skills": force_list(data.get("skills")),
-        "experience": force_list(data.get("experience")),
-        "projects": force_list(data.get("projects")),
-        "education": force_list(data.get("education")),
-        "extra_sections": force_list(data.get("extra_sections")),
+    # ---------- FIX EXPERIENCE ----------
+    def fix_experience(exp_list):
+        fixed = []
+        for e in exp_list or []:
+            fixed.append({
+                "role": e.get("role") or e.get("title") or "",
+                "company": e.get("company", ""),
+                "duration": e.get("duration") or e.get("dates") or "",
+                "points": e.get("points") or e.get("responsibilities") or []
+            })
+        return fixed
+
+    # ---------- FIX PROJECTS ----------
+    def fix_projects(proj_list):
+        fixed = []
+        for p in proj_list or []:
+            fixed.append({
+                "name": p.get("name") or p.get("title") or "",
+                "description": p.get("description", ""),
+                "points": p.get("points") or []
+            })
+        return fixed
+
+    # ---------- FIX EXTRA SECTIONS ----------
+    fixed_extra = []
+    raw_extra = data.get("extra_sections", [])
+
+    if isinstance(raw_extra, list):
+        for sec in raw_extra:
+
+            # Already correct
+            if isinstance(sec, dict) and "title" in sec and "items" in sec:
+                fixed_extra.append(sec)
+
+            # Wrong format → convert
+            elif isinstance(sec, dict):
+                for key, value in sec.items():
+                    fixed_extra.append({
+                        "title": key.capitalize(),
+                        "items": value if isinstance(value, list) else []
+                    })
+
+    return {
+        "name": str(data.get("name", "")),
+        "email": str(data.get("email", "")),
+        "phone": str(data.get("phone", "")),
+        "title": str(data.get("title", "")),
+        "summary": str(data.get("summary", "")),
+
+        "skills": data.get("skills", []) if isinstance(data.get("skills"), list) else [],
+        "experience": fix_experience(data.get("experience")),
+        "projects": fix_projects(data.get("projects")),
+        "education": data.get("education", []) if isinstance(data.get("education"), list) else [],
+        "extra_sections": fixed_extra
     }
 
 # ---------------- AI ENGINE ----------------
@@ -97,10 +130,6 @@ RULES:
 - NEVER invent data
 - ONLY rewrite existing content
 - ALWAYS return valid JSON
-
-IMPORTANT:
-- summary MUST exist (3-4 lines)
-- extract extra sections like hobbies, certifications if present
 
 OUTPUT:
 {{
@@ -141,7 +170,7 @@ def optimize_resume(data: ResumeRequest):
         raw = generate_resume(data.resume, data.job_description)
         result = normalize(raw)
 
-        print("FINAL DATA:", result)  # debug
+        print("🔥 FINAL DATA:", result)
 
         resume_id = str(uuid.uuid4())
 
@@ -211,7 +240,7 @@ def generate_pdf(resume_id: str):
     template_name = resume_store[resume_id]["template"]
 
     try:
-        print("PDF DATA:", data)
+        print("📄 PDF DATA:", data)
 
         template_path = f"templates/{template_name}.html"
 
@@ -231,7 +260,7 @@ def generate_pdf(resume_id: str):
         return file_path
 
     except Exception as e:
-        print("PDF ERROR:", e)
+        print("❌ PDF ERROR:", e)
         raise HTTPException(status_code=500, detail="PDF generation failed")
 
 # ---------------- DOWNLOAD ----------------
