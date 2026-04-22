@@ -20,15 +20,14 @@ body {
 .container {
   display: flex;
   width: 100%;
-  min-height: 100vh;
 }
 
-/* LEFT */
+/* LEFT PANEL */
 .left {
   width: 32%;
   background: #0f172a;
   color: #ffffff;
-  padding: 42px 28px;
+  padding: 40px 26px;
 }
 
 .name {
@@ -40,17 +39,17 @@ body {
   font-size: 13px;
   color: #cbd5e1;
   margin-top: 6px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .contact {
   font-size: 12px;
   line-height: 1.6;
-  margin-bottom: 25px;
+  margin-bottom: 22px;
 }
 
 .section {
-  margin-top: 22px;
+  margin-top: 20px;
 }
 
 .section h2 {
@@ -58,20 +57,24 @@ body {
   text-transform: uppercase;
   color: #94a3b8;
   border-bottom: 1px solid rgba(255,255,255,0.15);
-  padding-bottom: 6px;
-  margin-bottom: 10px;
+  padding-bottom: 5px;
+  margin-bottom: 8px;
+}
+
+.section ul {
+  padding-left: 16px;
 }
 
 .section li {
   font-size: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   line-height: 1.4;
 }
 
-/* RIGHT */
+/* RIGHT PANEL */
 .right {
   width: 68%;
-  padding: 42px;
+  padding: 40px;
 }
 
 .header-name {
@@ -88,20 +91,20 @@ body {
 .divider {
   height: 2px;
   background: #e5e7eb;
-  margin: 16px 0 28px;
+  margin: 14px 0 24px;
 }
 
 /* BLOCK */
 .block {
-  margin-bottom: 26px;
+  margin-bottom: 24px;
 }
 
 .block h2 {
   font-size: 13px;
   text-transform: uppercase;
   border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 6px;
-  margin-bottom: 12px;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
 }
 
 .summary {
@@ -110,8 +113,9 @@ body {
   color: #374151;
 }
 
+/* JOB */
 .job {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .job-header {
@@ -131,17 +135,17 @@ body {
 }
 
 .points {
-  padding-left: 18px;
+  padding-left: 16px;
   margin-top: 6px;
 }
 
 .points li {
   font-size: 12px;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   line-height: 1.5;
 }
 
-/* PRINT FIX */
+/* PRINT */
 * {
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
@@ -156,51 +160,57 @@ body {
 <!-- LEFT -->
 <div class="left">
 
-  <div class="name">{{ name | default('') }}</div>
-  <div class="title-left">{{ title | default('') }}</div>
+  <div class="name">{{ name or "" }}</div>
+  <div class="title-left">{{ title or "" }}</div>
 
   <div class="contact">
-    {{ email | default('') }}<br>
-    {{ phone | default('') }}
+    {{ email or "" }}<br>
+    {{ phone or "" }}
   </div>
 
   <!-- SKILLS -->
-  {% if skills %}
+  {% if skills and skills|length > 0 %}
   <div class="section">
     <h2>Skills</h2>
     <ul>
-      {% for s in skills | default([]) %}
-      <li>{{ s }}</li>
+      {% for s in skills %}
+        {% if s is string %}
+          <li>{{ s }}</li>
+        {% elif s.name %}
+          <li><strong>{{ s.name }}:</strong> {{ s.details | join(", ") }}</li>
+        {% endif %}
       {% endfor %}
     </ul>
   </div>
   {% endif %}
 
   <!-- EDUCATION -->
-  {% if education %}
+  {% if education and education|length > 0 %}
   <div class="section">
     <h2>Education</h2>
-    {% for e in education | default([]) %}
-    <p>
-      <strong>{{ e.degree | default('') }}</strong><br>
-      {{ e.institution | default('') }}<br>
-      <small>{{ e.year | default('') }}</small>
+    {% for e in education %}
+    <p style="font-size:12px; margin-bottom:8px;">
+      <strong>{{ e.degree or "" }}</strong><br>
+      {{ e.institution or "" }}<br>
+      <small>{{ e.year or "" }}</small>
     </p>
     {% endfor %}
   </div>
   {% endif %}
 
   <!-- EXTRA SECTIONS -->
-  {% if extra_sections %}
-    {% for sec in extra_sections | default([]) %}
-    <div class="section">
-      <h2>{{ sec.title | default('') }}</h2>
-      <ul>
-        {% for item in sec["items"] | default([]) %}
-        <li>{{ item }}</li>
-        {% endfor %}
-      </ul>
-    </div>
+  {% if extra_sections and extra_sections|length > 0 %}
+    {% for sec in extra_sections %}
+      {% if sec["items"] and sec["items"]|length > 0 %}
+      <div class="section">
+        <h2>{{ sec.title or "" }}</h2>
+        <ul>
+          {% for item in sec["items"] %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
     {% endfor %}
   {% endif %}
 
@@ -209,8 +219,8 @@ body {
 <!-- RIGHT -->
 <div class="right">
 
-  <div class="header-name">{{ name | default('') }}</div>
-  <div class="header-title">{{ title | default('') }}</div>
+  <div class="header-name">{{ name or "" }}</div>
+  <div class="header-title">{{ title or "" }}</div>
 
   <div class="divider"></div>
 
@@ -223,48 +233,52 @@ body {
   {% endif %}
 
   <!-- EXPERIENCE -->
-  {% if experience %}
+  {% if experience and experience|length > 0 %}
   <div class="block">
     <h2>Experience</h2>
 
-    {% for exp in experience | default([]) %}
+    {% for exp in experience %}
     <div class="job">
       <div class="job-header">
         <div>
-          {{ exp.role | default('') }} —
-          <span class="company">{{ exp.company | default('') }}</span>
+          {{ exp.role or "" }} —
+          <span class="company">{{ exp.company or "" }}</span>
         </div>
-        <div class="duration">{{ exp.duration | default('') }}</div>
+        <div class="duration">{{ exp.duration or "" }}</div>
       </div>
 
+      {% if exp.points and exp.points|length > 0 %}
       <ul class="points">
-        {% for p in exp.points | default([]) %}
+        {% for p in exp.points %}
         <li>{{ p }}</li>
         {% endfor %}
       </ul>
+      {% endif %}
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
   <!-- PROJECTS -->
-  {% if projects %}
+  {% if projects and projects|length > 0 %}
   <div class="block">
     <h2>Projects</h2>
 
-    {% for p in projects | default([]) %}
+    {% for p in projects %}
     <div class="job">
-      <strong>{{ p.name | default('') }}</strong>
+      <strong>{{ p.name or "" }}</strong>
 
       {% if p.description %}
       <div class="summary">{{ p.description }}</div>
       {% endif %}
 
+      {% if p.points and p.points|length > 0 %}
       <ul class="points">
-        {% for point in p.points | default([]) %}
+        {% for point in p.points %}
         <li>{{ point }}</li>
         {% endfor %}
       </ul>
+      {% endif %}
     </div>
     {% endfor %}
   </div>

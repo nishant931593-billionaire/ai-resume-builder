@@ -19,12 +19,13 @@ body {
 /* HEADER */
 .header {
   text-align: center;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
 .name {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
+  letter-spacing: 0.3px;
 }
 
 .title {
@@ -36,12 +37,12 @@ body {
 .contact {
   font-size: 12px;
   color: #555;
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 /* SECTION */
 .section {
-  margin-top: 22px;
+  margin-top: 20px;
 }
 
 .section h2 {
@@ -49,7 +50,8 @@ body {
   text-transform: uppercase;
   border-bottom: 1px solid #ddd;
   padding-bottom: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
 }
 
 /* TEXT */
@@ -89,6 +91,7 @@ li {
 /* SUMMARY */
 .summary {
   line-height: 1.6;
+  color: #222;
 }
 
 /* PRINT FIX */
@@ -122,7 +125,15 @@ li {
 {% if skills and skills|length > 0 %}
 <div class="section">
   <h2>Skills</h2>
-  <p>{{ skills | join(", ") }}</p>
+
+  {% for s in skills %}
+    {% if s is string %}
+      <p>{{ s }}</p>
+    {% elif s.name %}
+      <p><strong>{{ s.name }}:</strong> {{ s.details | join(", ") }}</p>
+    {% endif %}
+  {% endfor %}
+
 </div>
 {% endif %}
 
@@ -193,7 +204,7 @@ li {
 </div>
 {% endif %}
 
-<!-- EXTRA SECTIONS (FIXED) -->
+<!-- EXTRA SECTIONS -->
 {% if extra_sections and extra_sections|length > 0 %}
   {% for sec in extra_sections %}
     {% if sec["items"] and sec["items"]|length > 0 %}
