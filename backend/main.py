@@ -38,7 +38,7 @@ razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # ---------------- STORAGE ----------------
 resume_store = {}
-PRICE = 100
+PRICE = 4900
 
 os.makedirs("generated", exist_ok=True)
 
